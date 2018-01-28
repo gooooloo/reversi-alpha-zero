@@ -13,5 +13,13 @@ if _PATH_ not in sys.path:
 
 
 if __name__ == "__main__":
-    from reversi_zero import manager
-    manager.start()
+
+    from src.reversi_zero.lib.proc_helper import kill_children_processes, add_exit_task, signal_exit
+    add_exit_task(kill_children_processes)
+    signal_exit()
+
+    from src.reversi_zero import manager
+    try:
+        manager.start()
+    finally:
+        kill_children_processes()

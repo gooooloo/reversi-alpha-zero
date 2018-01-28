@@ -1,134 +1,189 @@
+import importlib
 import os
-from datetime import datetime
+from bisect import bisect
 from logging import getLogger
+from random import randint
 from time import sleep
 
 import keras.backend as K
 import numpy as np
 from keras.optimizers import SGD
-
-from reversi_zero.agent.model import ReversiModel, objective_function_for_policy, \
-    objective_function_for_value
-from reversi_zero.config import Config
-from reversi_zero.lib import tf_util
-from reversi_zero.lib.bitboard import bit_to_array
-from reversi_zero.lib.data_helper import get_game_data_filenames, read_game_data_from_file, \
-    get_next_generation_model_dirs
-from reversi_zero.lib.model_helpler import load_best_model_weight
+from src.reversi_zero.agent.model import ReversiModel, objective_function_for_policy, objective_function_for_value
+from src.reversi_zero.config import Config
+from src.reversi_zero.lib import tf_util
+from src.reversi_zero.lib.data_helper import get_game_data_filenames, read_game_data_from_file
+from src.reversi_zero.lib.model_helpler import load_model_weight, save_model_weight
 
 logger = getLogger(__name__)
 
 
 def start(config: Config):
-    tf_util.set_session_config(per_process_gpu_memory_fraction=0.59)
+    if config.opts.gpu_mem_frac is not None:
+        tf_util.set_session_config(per_process_gpu_memory_fraction=config.opts.gpu_mem_frac)
     return OptimizeWorker(config).start()
+
+
+class DataSet:
+    def __init__(self, loaded_data):
+        self.length_array = []
+        self.filename_array = []
+
+        total_length = 0
+        for filename in loaded_data:
+            length = len(loaded_data[filename])
+            total_length += length
+
+            self.length_array.append(total_length)
+            self.filename_array.append(filename)
+
+    def locate(self, index):
+        p = bisect(self.length_array, index)
+        offset = index - self.length_array[p-1] if p > 0 else index
+        return self.filename_array[p], offset
+
+    @property
+    def size(self):
+        return self.length_array[-1]
 
 
 class OptimizeWorker:
     def __init__(self, config: Config):
         self.config = config
         self.model = None  # type: ReversiModel
+        self.total_steps = 0
         self.loaded_filenames = set()
         self.loaded_data = {}
         self.dataset = None
         self.optimizer = None
 
     def start(self):
-        self.model = self.load_model()
+        self.model, self.total_steps = self.load_model()
+
+        # overwrite if caller requires to
+        if self.config.trainer.start_total_steps > 0:
+            self.total_steps = self.config.trainer.start_total_steps
+
         self.training()
 
     def training(self):
         self.compile_model()
-        last_save_step = total_steps = self.config.trainer.start_total_steps
-        min_data_size_to_learn = 100000
+        last_generation_step = last_save_step = 0
+        min_data_size_to_learn = self.config.trainer.min_data_size_to_learn
         self.load_play_data()
 
         while True:
             if self.dataset_size < min_data_size_to_learn:
                 logger.info(f"dataset_size={self.dataset_size} is less than {min_data_size_to_learn}")
                 sleep(60)
-                continue
-            self.update_learning_rate(total_steps)
-            steps = self.train_epoch(self.config.trainer.epoch_to_checkpoint)
-            total_steps += steps
-            if last_save_step + self.config.trainer.save_model_steps < total_steps:
-                self.save_current_model()
-                last_save_step = total_steps
                 self.load_play_data()
+                continue
+            self.update_learning_rate()
+            steps = self.train_epoch(self.config.trainer.epoch_to_checkpoint)
+            self.total_steps += steps
+
+            if not self.config.trainer.need_eval:
+                if last_generation_step + self.config.trainer.generation_model_steps <= self.total_steps:
+                    self.save_current_model_as_generation()
+                    last_generation_step = self.total_steps
+
+            if last_save_step + self.config.trainer.save_model_steps <= self.total_steps:
+                if self.config.trainer.need_eval:
+                    self.save_current_model_as_to_eval()
+                else:
+                    self.save_current_model()
+
+                last_save_step = self.total_steps
+
+            self.load_play_data()
+
+    def generate_train_data(self, batch_size):
+        class_attr = getattr(importlib.import_module(self.config.env.env_module_name), self.config.env.env_class_name)
+        env = class_attr()
+        # The AZ paper doesn't leverage the symmetric observation data augmentation. But it is nice to use it if we can.
+        symmetric_n = env.rotate_flip_op_count
+
+        while True:
+            orig_data_size = self.dataset.size
+            data_size = orig_data_size * symmetric_n if symmetric_n > 1 else orig_data_size
+
+            x, y1, y2 = [], [], []
+            for _ in range(batch_size):
+                n = randint(0, data_size - 1)
+                orig_n = n // symmetric_n if symmetric_n > 1 else n
+
+                file_name, offset = self.dataset.locate(orig_n)
+
+                state, policy, z = self.loaded_data[file_name][offset]
+                state = env.decompress_ob(state)
+
+                if symmetric_n > 1:
+                    op = n % symmetric_n
+                    state = env.rotate_flip_ob(state, op)
+                    policy = env.rotate_flip_pi(policy, op)
+
+                x.append(state)
+                y1.append(policy)
+                y2.append([z])
+
+            x = np.asarray(x)
+            y = [np.asarray(y1), np.asarray(y2)]
+            yield x, y
 
     def train_epoch(self, epochs):
         tc = self.config.trainer
-        state_ary, policy_ary, z_ary = self.dataset
-        self.model.model.fit(state_ary, [policy_ary, z_ary],
-                             batch_size=tc.batch_size,
-                             epochs=epochs)
-        steps = (state_ary.shape[0] // tc.batch_size) * epochs
-        return steps
+        self.model.model.fit_generator(generator=self.generate_train_data(tc.batch_size),
+                                       steps_per_epoch=tc.epoch_steps,
+                                       epochs=epochs)
+        return tc.epoch_steps * epochs
 
     def compile_model(self):
         self.optimizer = SGD(lr=1e-2, momentum=0.9)
         losses = [objective_function_for_policy, objective_function_for_value]
         self.model.model.compile(optimizer=self.optimizer, loss=losses)
 
-    def update_learning_rate(self, total_steps):
-        # The deepmind paper says
-        # ~400k: 1e-2
-        # 400k~600k: 1e-3
-        # 600k~: 1e-4
+    def update_learning_rate(self):
 
-        if total_steps < 100000:
-            lr = 1e-2
-        elif total_steps < 200000:
-            lr = 1e-3
-        else:
-            lr = 1e-4
+        for this_lr, till_step in self.config.trainer.lr_schedule:
+            if self.total_steps < till_step:
+                lr = this_lr
+                break
         K.set_value(self.optimizer.lr, lr)
-        logger.debug(f"total step={total_steps}, set learning rate to {lr}")
+        logger.debug(f"total step={self.total_steps}, set learning rate to {lr}")
 
     def save_current_model(self):
+        save_model_weight(self.model, self.total_steps)
+
+    def save_current_model_as_to_eval(self):
         rc = self.config.resource
-        model_id = datetime.now().strftime("%Y%m%d-%H%M%S.%f")
-        model_dir = os.path.join(rc.next_generation_model_dir, rc.next_generation_model_dirname_tmpl % model_id)
+        model_dir = os.path.join(rc.to_eval_model_dir, rc.to_eval_model_dirname_tmpl % self.total_steps)
         os.makedirs(model_dir, exist_ok=True)
-        config_path = os.path.join(model_dir, rc.next_generation_model_config_filename)
-        weight_path = os.path.join(model_dir, rc.next_generation_model_weight_filename)
-        self.model.save(config_path, weight_path)
+        config_path = os.path.join(model_dir, rc.model_config_filename)
+        weight_path = os.path.join(model_dir, rc.model_weight_filename)
+        self.model.save(config_path, weight_path, self.total_steps)
 
-    def collect_all_loaded_data(self):
-        state_ary_list, policy_ary_list, z_ary_list = [], [], []
-        for s_ary, p_ary, z_ary_ in self.loaded_data.values():
-            state_ary_list.append(s_ary)
-            policy_ary_list.append(p_ary)
-            z_ary_list.append(z_ary_)
-
-        state_ary = np.concatenate(state_ary_list)
-        policy_ary = np.concatenate(policy_ary_list)
-        z_ary = np.concatenate(z_ary_list)
-        return state_ary, policy_ary, z_ary
+    def save_current_model_as_generation(self):
+        rc = self.config.resource
+        model_dir = os.path.join(rc.generation_model_dir, rc.generation_model_dirname_tmpl % self.total_steps)
+        os.makedirs(model_dir, exist_ok=True)
+        config_path = os.path.join(model_dir, rc.model_config_filename)
+        weight_path = os.path.join(model_dir, rc.model_weight_filename)
+        self.model.save(config_path, weight_path, self.total_steps)
 
     @property
     def dataset_size(self):
         if self.dataset is None:
             return 0
-        return len(self.dataset[0])
+        return self.dataset.size
 
     def load_model(self):
         from reversi_zero.agent.model import ReversiModel
         model = ReversiModel(self.config)
-        rc = self.config.resource
 
-        dirs = get_next_generation_model_dirs(rc)
-        if not dirs:
-            logger.debug(f"loading best model")
-            if not load_best_model_weight(model):
-                raise RuntimeError(f"Best model can not loaded!")
-        else:
-            latest_dir = dirs[-1]
-            logger.debug(f"loading latest model")
-            config_path = os.path.join(latest_dir, rc.next_generation_model_config_filename)
-            weight_path = os.path.join(latest_dir, rc.next_generation_model_weight_filename)
-            model.load(config_path, weight_path)
-        return model
+        logger.debug(f"loading model")
+        steps = load_model_weight(model)
+        if steps is None:
+            raise RuntimeError(f"Model can not loaded!")
+        return model, steps
 
     def load_play_data(self):
         filenames = get_game_data_filenames(self.config.resource)
@@ -145,13 +200,13 @@ class OptimizeWorker:
 
         if updated:
             logger.debug("updating training dataset")
-            self.dataset = self.collect_all_loaded_data()
+            self.dataset = DataSet(self.loaded_data)
 
     def load_data_from_file(self, filename):
         try:
             logger.debug(f"loading data from {filename}")
             data = read_game_data_from_file(filename)
-            self.loaded_data[filename] = self.convert_to_training_data(data)
+            self.loaded_data[filename] = data
             self.loaded_filenames.add(filename)
         except Exception as e:
             logger.warning(str(e))
@@ -161,22 +216,3 @@ class OptimizeWorker:
         self.loaded_filenames.remove(filename)
         if filename in self.loaded_data:
             del self.loaded_data[filename]
-
-    @staticmethod
-    def convert_to_training_data(data):
-        """
-
-        :param data: format is SelfPlayWorker.buffer
-            list of [(own: bitboard, enemy: bitboard), [policy: float 64 items], z: number]
-        :return:
-        """
-        state_list = []
-        policy_list = []
-        z_list = []
-        for state, policy, z in data:
-            own, enemy = bit_to_array(state[0], 64).reshape((8, 8)), bit_to_array(state[1], 64).reshape((8, 8))
-            state_list.append([own, enemy])
-            policy_list.append(policy)
-            z_list.append(z)
-
-        return np.array(state_list), np.array(policy_list), np.array(z_list)

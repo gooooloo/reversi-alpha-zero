@@ -1,272 +1,410 @@
-from _asyncio import Future
-from asyncio.queues import Queue
-from collections import defaultdict, namedtuple
-from logging import getLogger
-import asyncio
+# -*- coding: utf-8 -*-
 
 import numpy as np
-from numpy.random import random
+import random
 
-from reversi_zero.agent.api import ReversiModelAPI
-from reversi_zero.config import Config
-from reversi_zero.env.reversi_env import ReversiEnv, Player, Winner
-from reversi_zero.lib.bitboard import find_correct_moves, bit_to_array, flip_vertical, rotate90
+from asyncio.queues import Queue
+from collections import namedtuple
+from logging import getLogger, WARNING
+import asyncio
 
-CounterKey = namedtuple("CounterKey", "black white next_player")
-QueueItem = namedtuple("QueueItem", "state future")
-HistoryItem = namedtuple("HistoryItem", "action policy values visit")
 
+getLogger('asyncio').setLevel(WARNING)
 logger = getLogger(__name__)
 
+QueueItem = namedtuple("QueueItem", "node state future")
 
-class ReversiPlayer:
-    def __init__(self, config: Config, model, play_config=None):
-        """
 
-        :param config:
-        :param reversi_zero.agent.model.ReversiModel model:
-        """
+class SelfPlayer(object):
+    def __init__(self, make_sim_env_fn, config, api, play_config=None):
+        self.game_tree = GameTree(make_sim_env_fn=make_sim_env_fn, config=config, api=api, play_config=play_config)
+
+    def prepare(self, root_env):
+        self.game_tree.expand_root(root_env=root_env)
+
+    def think(self, tau=0):
+        return self.game_tree.mcts_and_play(tau)
+
+    def play(self, act):
+        self.game_tree.keep_only_subtree(act)
+
+
+class EvaluatePlayer(SelfPlayer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Before the model becomes accurate, rotate_flip introduces randomness.
+        self.game_tree.allow_rotate_flip_ob = False
+
+    def play(self, act, env):
+        self.game_tree.keep_only_subtree(act)
+        if not self.game_tree.root_node.expanded:
+            # possible that opposite plays an action which I haven't searched yet.
+            self.game_tree.expand_root(root_env=env)
+
+    def get_think_info(self):
+        node = self.game_tree.root_node
+        return node.full_N, node.full_Q, node.full_combined_V, node.full_P
+
+
+class GameTree(object):
+    def __init__(self, make_sim_env_fn, config=None, play_config=None, api=None):
+        self.make_sim_env_fn = make_sim_env_fn
         self.config = config
-        self.model = model
         self.play_config = play_config or self.config.play
-        self.api = ReversiModelAPI(self.config, self.model)
-
-        # key=(own, enemy, action)
-        self.var_n = defaultdict(lambda: np.zeros((64,)))
-        self.var_w = defaultdict(lambda: np.zeros((64,)))
-        self.var_q = defaultdict(lambda: np.zeros((64,)))
-        self.var_u = defaultdict(lambda: np.zeros((64,)))
-        self.var_p = defaultdict(lambda: np.zeros((64,)))
-        self.expanded = set()
-        self.now_expanding = set()
+        self.root_node = Node(self.play_config.c_puct)
         self.prediction_queue = Queue(self.play_config.prediction_queue_size)
         self.sem = asyncio.Semaphore(self.play_config.parallel_search_num)
+        self.api = api
 
-        self.moves = []
         self.loop = asyncio.get_event_loop()
         self.running_simulation_num = 0
 
-        self.thinking_history = {}  # for fun
+        self.allow_rotate_flip_ob = True
 
-    def action(self, own, enemy):
-        """
+    def expand_root(self, root_env):
+        p, v = self.api.predict(np.asarray(root_env.observation))
+        self.root_node.expand_and_evaluate(p, v, root_env.legal_moves)
 
-        :param own: BitBoard
-        :param enemy:  BitBoard
-        :return: action: move pos=0 ~ 63 (0=top left, 7 top right, 63 bottom right)
-        """
-        env = ReversiEnv().update(own, enemy, Player.black)
-        key = self.counter_key(env)
+    def mcts_and_play(self, tau):
+        self.mcts()
+        return self.play(tau)
 
-        for tl in range(self.play_config.thinking_loop):
-            if tl > 0 and self.play_config.logging_thinking:
-                logger.debug(f"continue thinking: policy move=({action % 8}, {action // 8}), "
-                             f"value move=({action_by_value % 8}, {action_by_value // 8})")
-            self.search_moves(own, enemy)
-            policy = self.calc_policy(own, enemy)
-            self.moves.append([(own, enemy), list(policy)])
-            action = int(np.random.choice(range(64), p=policy))
-            action_by_value = int(np.argmax(self.var_q[key] + (self.var_n[key] > 0)*100))
-            if action == action_by_value or env.turn < self.play_config.change_tau_turn:
-                break
+    def keep_only_subtree(self, action):
+        self.root_node = self.root_node.child_by_value(action)
+        assert self.root_node is not None
 
-        # this is for play_gui, not necessary when training.
-        self.thinking_history[(own, enemy)] = HistoryItem(action, policy, list(self.var_q[key]), list(self.var_n[key]))
+    def mcts(self):
 
-        return action
+        # Question: is it correct doing it every time mcts starts, or should it be just first step of a game?
+        self.root_node.add_dirichlet_noise(self.play_config.noise_eps, self.play_config.dirichlet_alpha)
 
-    def ask_thought_about(self, own, enemy) -> HistoryItem:
-        return self.thinking_history.get((own, enemy))
-
-    def search_moves(self, own, enemy):
-        loop = self.loop
         self.running_simulation_num = 0
-
         coroutine_list = []
         for it in range(self.play_config.simulation_num_per_move):
-            cor = self.start_search_my_move(own, enemy)
-            coroutine_list.append(cor)
-
+            coroutine_list.append(self.simulate())
         coroutine_list.append(self.prediction_worker())
-        loop.run_until_complete(asyncio.gather(*coroutine_list))
+        self.loop.run_until_complete(asyncio.gather(*coroutine_list))
 
-    async def start_search_my_move(self, own, enemy):
+    async def simulate(self):
         self.running_simulation_num += 1
-        with await self.sem:  # reduce parallel search number
-            env = ReversiEnv().update(own, enemy, Player.black)
-            leaf_v = await self.search_my_move(env, is_root_node=True)
+        with await self.sem:
+            leaf_v = await self.simulate_internal()
             self.running_simulation_num -= 1
             return leaf_v
 
-    async def search_my_move(self, env: ReversiEnv, is_root_node=False):
-        """
-
-        Q, V is value for this Player(always black).
-        P is value for the player of next_player (black or white)
-        :param env:
-        :param is_root_node:
-        :return:
-        """
-        if env.done:
-            if env.winner == Winner.black:
-                return 1
-            elif env.winner == Winner.white:
-                return -1
-            else:
-                return 0
-
-        key = self.counter_key(env)
-
-        while key in self.now_expanding:
-            await asyncio.sleep(self.config.play.wait_for_expanding_sleep_sec)
-
-        # is leaf?
-        if key not in self.expanded:  # reach leaf node
-            leaf_v = await self.expand_and_evaluate(env)
-            if env.next_player == Player.black:
-                return leaf_v  # Value for black
-            else:
-                return -leaf_v  # Value for white == -Value for black
-
-        action_t = self.select_action_q_and_u(env, is_root_node)
-        _, _ = env.step(action_t)
+    async def simulate_internal(self):
+        assert self.root_node.expanded
 
         virtual_loss = self.config.play.virtual_loss
-        self.var_n[key][action_t] += virtual_loss
-        self.var_w[key][action_t] -= virtual_loss
-        leaf_v = await self.search_my_move(env)  # next move
+        env = self.make_sim_env_fn()
+        leaf_node = None
+        leaf_v = None
 
-        # on returning search path
-        # update: N, W, Q, U
-        n = self.var_n[key][action_t] = self.var_n[key][action_t] - virtual_loss + 1
-        w = self.var_w[key][action_t] = self.var_w[key][action_t] + virtual_loss + leaf_v
-        self.var_q[key][action_t] = w / n
-        return leaf_v
+        cur_node = self.root_node
 
-    async def expand_and_evaluate(self, env):
-        """expand new leaf
+        while leaf_node is None:
 
-        update var_p, return leaf_v
+            next_node = await cur_node.select_best_child_and_add_virtual_loss_lock(virtual_loss)
 
-        :param ReversiEnv env:
-        :return: leaf_v
-        """
+            env.step(next_node.value)
+            if env.done:
+                leaf_node = next_node
+                leaf_v = -1 if env.last_player_wins else 1 if env.last_player_loses else 0
+                break
 
-        key = self.counter_key(env)
-        self.now_expanding.add(key)
+            if not next_node.expanded and not await next_node.expanded_lock():
+                v, new = await self.expand_and_evaluate(env, next_node)
+                if new:
+                    leaf_node = next_node
+                    leaf_v = v
+                    break
 
-        black, white = env.board.black, env.board.white
+            cur_node = next_node
 
-        # (di(p), v) = fθ(di(sL))
-        # rotation and flip. flip -> rot.
-        is_flip_vertical = random() < 0.5
-        rotate_right_num = int(random() * 4)
-        if is_flip_vertical:
-            black, white = flip_vertical(black), flip_vertical(white)
-        for i in range(rotate_right_num):
-            black, white = rotate90(black), rotate90(white)  # rotate90: rotate bitboard RIGHT 1 time
+        assert leaf_node is not None
+        assert leaf_v is not None
 
-        black_ary = bit_to_array(black, 64).reshape((8, 8))
-        white_ary = bit_to_array(white, 64).reshape((8, 8))
-        state = [black_ary, white_ary] if env.next_player == Player.black else [white_ary, black_ary]
-        future = await self.predict(np.array(state))  # type: Future
+        v = leaf_v
+
+        # backup
+        cur_node = leaf_node
+        while cur_node is not self.root_node:
+            v = -v  # important: reverse v
+
+            parent = cur_node.parent
+            await parent.backup_and_substract_virtual_loss_lock(virtual_loss, v, cur_node.sibling_index)
+
+            cur_node = parent
+
+        return -v  # v for root node
+
+    async def expand_and_evaluate(self, env, node):
+
+        # do it outside of synchronized block to cut down synchronization overhead.
+        ob, rotate_flip_op = np.asarray(env.observation), None
+        if self.allow_rotate_flip_ob and env.rotate_flip_op_count > 0:
+            rotate_flip_op = random.randint(0, env.rotate_flip_op_count - 1)
+            ob = env.rotate_flip_ob(ob, rotate_flip_op)
+
+        async def gen_v_future_coroutine():
+            the_future = await self.predict(ob)
+            return (the_future, rotate_flip_op)
+
+        # this will overwrite previous rotate_flip_op, it is ok.
+        (future, rotate_flip_op), new = await node.v_future_lock(gen_v_future_coroutine)
+
         await future
-        leaf_p, leaf_v = future.result()
+        p, v = future.result()
 
-        # reverse rotate and flip about leaf_p
-        if rotate_right_num > 0 or is_flip_vertical:  # reverse rotation and flip. rot -> flip.
-            leaf_p = leaf_p.reshape((8, 8))
-            if rotate_right_num > 0:
-                leaf_p = np.rot90(leaf_p, k=rotate_right_num)  # rot90: rotate matrix LEFT k times
-            if is_flip_vertical:
-                leaf_p = np.flipud(leaf_p)
-            leaf_p = leaf_p.reshape((64, ))
+        if rotate_flip_op is not None:
+            p = env.counter_rotate_flip_pi(p, rotate_flip_op)
 
-        self.var_p[key] = leaf_p  # P is value for next_player (black or white)
-        self.expanded.add(key)
-        self.now_expanding.remove(key)
-        return float(leaf_v)
+        await node.expand_and_evaluate_lock(p, v, env.legal_moves)
+
+        return float(v), new
 
     async def prediction_worker(self):
-        """For better performance, queueing prediction requests and predict together in this worker.
-
-        speed up about 45sec -> 15sec for example.
-        :return:
-        """
+        margin = 10
         q = self.prediction_queue
-        margin = 10  # avoid finishing before other searches starting.
         while self.running_simulation_num > 0 or margin > 0:
             if q.empty():
-                if margin > 0:
-                    margin -= 1
+                margin -= 1 if margin > 0 else 0
                 await asyncio.sleep(self.config.play.prediction_worker_sleep_sec)
                 continue
-            item_list = [q.get_nowait() for _ in range(q.qsize())]  # type: list[QueueItem]
-            # logger.debug(f"predicting {len(item_list)} items")
+            item_list = [q.get_nowait() for _ in range(q.qsize())]
             data = np.array([x.state for x in item_list])
-            policy_ary, value_ary = self.api.predict(data)
+            policy_ary, value_ary = self.api.predict(data)  # policy_ary: [n, 64], value_ary: [n, 1]
             for p, v, item in zip(policy_ary, value_ary, item_list):
                 item.future.set_result((p, v))
 
     async def predict(self, x):
         future = self.loop.create_future()
-        item = QueueItem(x, future)
+        item = QueueItem(self, x, future)
         await self.prediction_queue.put(item)
         return future
 
-    def finish_game(self, z):
-        """
-
-        :param z: win=1, lose=-1, draw=0
-        :return:
-        """
-        for move in self.moves:  # add this game winner result to all past moves.
-            move += [z]
-
-    def calc_policy(self, own, enemy):
-        """calc π(a|s0)
-
-        :param own:
-        :param enemy:
-        :return:
-        """
-        pc = self.play_config
-        env = ReversiEnv().update(own, enemy, Player.black)
-        key = self.counter_key(env)
-        if env.turn < pc.change_tau_turn:
-            return self.var_n[key] / np.sum(self.var_n[key])  # tau = 1
+    # those illegal actions are with full_N == 0, so won't be played
+    def play(self, tau):
+        N = self.root_node.full_N
+        if abs(tau-1) < 1e-10:
+            pi = N / np.sum(N)
+            act = np.random.choice(range(len(pi)), p=pi)
+            assert pi[act] > 0
         else:
-            action = np.argmax(self.var_n[key])  # tau = 0
-            ret = np.zeros(64)
-            ret[action] = 1
-            return ret
+            assert abs(tau) < 1e-10, f'tau={tau}(expected to be either 0 or 1 only)'
+            act = random.choice(np.argwhere(abs(N - np.amax(N)) < 1e-10).flatten().tolist())
+            pi = np.zeros([len(N)])
+            pi[act] = 1
 
-    @staticmethod
-    def counter_key(env: ReversiEnv):
-        return CounterKey(env.board.black, env.board.white, env.next_player.value)
-
-    def select_action_q_and_u(self, env, is_root_node):
-        key = self.counter_key(env)
-        if env.next_player == Player.black:
-            legal_moves = find_correct_moves(key.black, key.white)
+        # the paper says, AGZ resigns if both root value and best child value are lower than threshold
+        # TODO: is it v or Q or Q+U to check?
+        root_v = self.root_node.v
+        # child'v is opponent's winning rate, need to reverse
+        # Note that root_node.children are only for those legal action.
+        children_v = [-child.v for child in self.root_node.children]
+        if len(children_v) > 0:
+            best_child_v = np.max(children_v)
         else:
-            legal_moves = find_correct_moves(key.white, key.black)
-        # noinspection PyUnresolvedReferences
-        xx_ = np.sqrt(np.sum(self.var_n[key]))  # SQRT of sum(N(s, b); for all b)
-        xx_ = max(xx_, 1)  # avoid u_=0 if N is all 0
-        p_ = self.var_p[key]
+            best_child_v = root_v  # trick. Since it is for resign_check only, it works to let be root_v.
+        values_of_resign_check = (root_v, best_child_v)
 
-        if is_root_node:  # Is it correct?? -> (1-e)p + e*Dir(0.03)
-            p_ = (1 - self.play_config.noise_eps) * p_ + \
-                 self.play_config.noise_eps * np.random.dirichlet([self.play_config.dirichlet_alpha] * 64)
+        return int(act), pi, values_of_resign_check
 
-        u_ = self.play_config.c_puct * p_ * xx_ / (1 + self.var_n[key])
-        if env.next_player == Player.black:
-            v_ = (self.var_q[key] + u_ + 1000) * bit_to_array(legal_moves, 64)
-        else:
-            # When enemy's selecting action, flip Q-Value.
-            v_ = (-self.var_q[key] + u_ + 1000) * bit_to_array(legal_moves, 64)
 
-        # noinspection PyTypeChecker
-        action_t = int(np.argmax(v_))
-        return action_t
+class Node(object):
+    def __init__(self, c_puct, parent=None, sibling_index=None, value=None):
+        self.children = None
+        self._parent = parent
+
+        self._c_puct = c_puct
+        self._sibling_index = sibling_index
+        self._value = value  # corresponding "action" of env
+
+        self.p = None
+        self.W = None
+        self.Q = None
+        self.N = None
+        self.v = 0.
+
+        self.lock = asyncio.Lock()
+
+        self.v_future = None
+
+        # below variables are only for speeding up MCTS
+        self._sum_n = None
+        self._best_children_indices = None
+        self._full_n_size = None
+
+    # given the real meaning of node.value, full_N is actually N for every "action" of env
+    @property
+    def full_N(self):
+        assert self.expanded
+
+        assert np.sum(self.N) > 0, f'full_N is called with self.N={self.N}'
+
+        ret = np.zeros([self._full_n_size])
+        for node in self.children:
+            ret[node.value] = self.N[node.sibling_index]
+
+        assert abs(np.sum(self.N) - np.sum(ret)) < 1e-10
+        return ret
+
+    # given the real meaning of node.value, full_P is actually P for every "action" of env
+    @property
+    def full_P(self):
+        assert self.expanded
+
+        ret = np.zeros([self._full_n_size])
+        for node in self.children:
+            ret[node.value] = self.p[node.sibling_index]
+
+        assert abs(np.sum(self.p) - np.sum(ret)) < 1e-10
+        return ret
+
+    # given the real meaning of node.value, full_Q is actually Q for every "action" of env
+    @property
+    def full_Q(self):
+        assert self.expanded
+
+        ret = np.zeros([self._full_n_size])
+        for node in self.children:
+            ret[node.value] = self.Q[node.sibling_index]
+
+        assert abs(np.sum(self.Q) - np.sum(ret)) < 1e-10
+        return ret
+
+    # given the real meaning of node.value, full_combined_V is actually combined_V for every "action" of env
+    @property
+    def full_combined_V(self):
+        assert self.expanded
+
+        v = self._children_v()
+        ret = np.zeros([self._full_n_size])
+        for node in self.children:
+            ret[node.value] = v[node.sibling_index]
+
+        assert abs(np.sum(v) - np.sum(ret)) < 1e-10
+        return ret
+
+    @property
+    def expanded(self):
+        return self.children is not None
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def sibling_index(self):
+        return self._sibling_index
+
+    @property
+    def parent(self):
+        return self._parent
+
+    def child_by_value(self, value):
+        return next((child for child in self.children if child.value == value), None)
+
+    def expand_and_evaluate(self, p, v, legal_moves):
+
+        if self.expanded:
+            return
+
+        self.p = p[legal_moves == 1]  # this.p is (typically much) shorter than p
+        assert 0 < len(self.p) < len(legal_moves), f'{len(self.p)}, {len(legal_moves)} '
+
+        self.v = v
+        self.W = np.zeros([len(self.p)])
+        self.Q = np.zeros([len(self.p)])
+        self.N = np.zeros([len(self.p)])
+
+        actions = (i for i,v in enumerate(legal_moves) if v == 1)
+        self.children = [Node(c_puct=self._c_puct, parent=self, sibling_index=i, value=a)
+                         for i,a in enumerate(actions)]
+        assert len(self.children) > 0
+
+        self._sum_n = 0
+        self._best_children_indices = None
+        self._full_n_size = len(legal_moves)
+
+    def add_dirichlet_noise(self, eps, alpha):
+        self.p = (1-eps)*self.p + eps*np.random.dirichlet([alpha]*len(self.p))
+        self._best_children_indices = None
+
+    def add_virtual_loss(self, virtual_loss, child):
+        self.N[child] += virtual_loss
+        self.W[child] -= virtual_loss
+        self.Q[child] = self.W[child] / self.N[child]
+        assert self.N[child] > 0, f'N[{child}]={self.N[child]}'
+
+        self._sum_n += virtual_loss
+        self._best_children_indices = None
+
+    def substract_virtual_loss(self, virtual_loss, child):
+        self.N[child] -= virtual_loss
+        self.W[child] += virtual_loss
+        self.Q[child] = self.W[child] / self.N[child] if self.N[child] > 1e-5 else 0
+        assert self.N[child] >= 0, f'N[{child}]={self.N[child]}'
+
+        self._sum_n -= virtual_loss
+        self._best_children_indices = None
+
+    def backup(self, v, child):
+        self.N[child] += 1
+        self.W[child] += v
+        self.Q[child] = self.W[child] / self.N[child]
+        assert self.N[child] > 0, f'N[{child}]={self.N[child]}'
+
+        self._sum_n += 1
+        self._best_children_indices = None
+
+    def backup_and_stubstract_virtual_loss(self, virtual_loss, v, child):
+        self.backup(v, child)
+        self.substract_virtual_loss(virtual_loss, child)
+
+    def best_children_indices(self):
+        if self._best_children_indices is None:
+            if len(self.p) == 1:
+                self._best_children_indices = [0]
+            else:
+                v = self._children_v()
+                self._best_children_indices = np.argwhere(abs(v-np.amax(v)) < 1e-10).flatten().tolist()
+
+        return self._best_children_indices
+
+    def _children_v(self):
+        sqrt_sum_n = np.sqrt(self._sum_n)
+        return self.Q + self._c_puct * self.p * sqrt_sum_n / (1 + self.N)
+
+    def select_best_child_and_add_virtual_loss(self, virtual_loss):
+        ci = random.choice(self.best_children_indices())
+        next_node = self.children[ci]
+        self.add_virtual_loss(virtual_loss, next_node.sibling_index)
+
+        return next_node
+
+    async def expanded_lock(self):
+        with await self.lock:
+            return self.expanded
+
+    async def expand_and_evaluate_lock(self, *args, **kwargs):
+        with await self.lock:
+            return self.expand_and_evaluate(*args, **kwargs)
+
+    async def select_best_child_and_add_virtual_loss_lock(self, *args, **kwargs):
+        with await self.lock:
+            return self.select_best_child_and_add_virtual_loss(*args, **kwargs)
+
+    async def backup_and_substract_virtual_loss_lock(self, *args, **kwargs):
+        with await self.lock:
+            return self.backup_and_stubstract_virtual_loss(*args, **kwargs)
+
+    async def v_future_lock(self, gen_v_future_coroutine):
+        with await self.lock:
+            new = False
+            if not self.v_future:
+                self.v_future = await gen_v_future_coroutine()
+                new = True
+            return self.v_future, new
+

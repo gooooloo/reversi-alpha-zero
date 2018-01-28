@@ -14,7 +14,7 @@ from keras.layers.normalization import BatchNormalization
 from keras.losses import mean_squared_error
 from keras.regularizers import l2
 
-from reversi_zero.config import Config
+from src.reversi_zero.config import Config
 
 logger = getLogger(__name__)
 
@@ -27,7 +27,7 @@ class ReversiModel:
 
     def build(self):
         mc = self.config.model
-        in_x = x = Input((2, 8, 8))  # [own(8x8), enemy(8x8)]
+        in_x = x = Input(self.config.model.input_size)
 
         # (batch, channels, height, width)
         x = Conv2D(filters=mc.cnn_filter_num, kernel_size=mc.cnn_filter_size, padding="same",
@@ -44,8 +44,7 @@ class ReversiModel:
         x = BatchNormalization(axis=1)(x)
         x = Activation("relu")(x)
         x = Flatten()(x)
-        # no output for 'pass'
-        policy_out = Dense(8*8, kernel_regularizer=l2(mc.l2_reg), activation="softmax", name="policy_out")(x)
+        policy_out = Dense(self.config.model.policy_size, kernel_regularizer=l2(mc.l2_reg), activation="softmax", name="policy_out")(x)
 
         # for value output
         x = Conv2D(filters=1, kernel_size=1, data_format="channels_first", kernel_regularizer=l2(mc.l2_reg))(res_out)
@@ -83,19 +82,27 @@ class ReversiModel:
         if os.path.exists(config_path) and os.path.exists(weight_path):
             logger.debug(f"loading model from {config_path}")
             with open(config_path, "rt") as f:
-                self.model = Model.from_config(json.load(f))
+                config = json.load(f)
+                try:
+                    steps = int(config['steps'])
+                except ValueError:
+                    steps = None
+                del config['steps']
+                self.model = Model.from_config(config)
             self.model.load_weights(weight_path)
             self.digest = self.fetch_digest(weight_path)
             logger.debug(f"loaded model digest = {self.digest}")
-            return True
+            return steps
         else:
             logger.debug(f"model files does not exist at {config_path} and {weight_path}")
-            return False
+            return None
 
-    def save(self, config_path, weight_path):
+    def save(self, config_path, weight_path, steps=0):
         logger.debug(f"save model to {config_path}")
         with open(config_path, "wt") as f:
-            json.dump(self.model.get_config(), f)
+            config = self.model.get_config()
+            config['steps'] = steps
+            json.dump(config, f)
             self.model.save_weights(weight_path)
         self.digest = self.fetch_digest(weight_path)
         logger.debug(f"saved model digest {self.digest}")
