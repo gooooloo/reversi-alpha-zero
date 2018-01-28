@@ -140,13 +140,12 @@ Strength Records
 Records 1
 ---------
 
-Rule: Play with this [iOS APP](https://itunes.apple.com/ca/app/id574915961). For each model, we plays 2 games, 1 as black, 1 as white. If wins at least once, no matter as black or white, we count it as a 'won'.
+Rule: Play with this [iOS APP](https://itunes.apple.com/cn/app/id574915961). For each model, we plays 2 games, 1 as black, 1 as white. If wins at least once, no matter as black or white, we count it as a 'won'.
 
 - step-17600 (100sim): won level 1,2,3
 - step-20000 (100sim): won level 4
 - step-28000 (100sim): won level 5,6,7,8,9,10
 - step-40000 (100sim): won level 11
-- step-40800 (100sim): TO BE TESTED
 - step-42400 (100sim): won level 12
 - step-52000 (100sim): won level 16
 - step-54400 (100sim): won level 14,15
