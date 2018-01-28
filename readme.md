@@ -137,6 +137,8 @@ python3.6 -m src.reversi_zero.run league --env reversi --n-workers 4
 Strength Records
 ==========
 
+Below records are using the AlphaGoZero way,  which has a 'Evaluator' module. Not AlphaZero way.
+
 Records 1
 ---------
 
@@ -195,3 +197,10 @@ Rule: play with NTest. `NTest:xxx` means NTest with strenth xxx.
 ||1600 sim|1/0/19||||
 ||3200 sim|3/0/17||||
 ||6400 sim|5/0/15||||
+
+
+Credit
+==========
+
+- My codes are based on @mokemokechicken 's [original implementation](https://github.com/mokemokechicken/reversi-alpha-zero), which is really great.
+- My multi-process idea is borrowed from @akababa 's [repo](https://github.com/Akababa/Chess-Zero).
