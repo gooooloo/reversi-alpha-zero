@@ -13,6 +13,12 @@ Environment
 * Keras: 2.0.8
 
 
+Download Pretrained Model to Play with
+==========
+
+[here](https://github.com/gooooloo/reversi-alpha-zero-models)
+
+
 Training Pipeline Examples
 ==========
 
@@ -170,6 +176,8 @@ Records 2
 
 Rule: Play with this [iOS APP](https://itunes.apple.com/ca/app/id574915961). For each model, we plays 2 games, 1 as black, 1 as white. If wins at least once, no matter as black or white, we count it as a 'won'.
 
+Model step-350400 can be downloaded from [here](https://github.com/gooooloo/reversi-alpha-zero-models/tree/master/model_350400-steps)
+
 - step-263200 (100sim): won level ~ 31, lose to level 32
 - step-302400 (100sim): won level ~ 44 (level 45 not tested yet)
 - step-302400 (40sim): won level ~ 53, lose to level 54 
@@ -188,15 +196,15 @@ Rule: play with NTest. `NTest:xxx` means NTest with strenth xxx.
 
 |||NTest:10|NTest:11|NTest:12|NTest:13|
 |-----|-----|-----|-----|-----|-----|
-|step-421600|800 sim|1/0/3||||
-||1600 sim|0/0/4||||
-|step-424000|100 sim|0/0/20|0/0/20|0/0/20|0/0/20|
-||200 sim|0/2/18|0/0/20|2/0/18|0/0/20|
-||400 sim|20/0/0|0/20/0|8/0/12|0/0/20|
-||800 sim|12/0/8||2/0/18|0/0/20|
-||1600 sim|1/0/19||||
-||3200 sim|3/0/17||||
-||6400 sim|5/0/15||||
+|step-421600|800 sim| 1/ 0/ 3||||
+||1600 sim| 0/ 0/ 4||||
+|step-424000|100 sim| 0/ 0/20| 0/ 0/20| 0/ 0/20| 0/ 0/20|
+||200 sim| 0/ 2/18| 0/ 0/20| 2/ 0/18| 0/ 0/20|
+||400 sim|20/ 0/ 0| 0/20/ 0| 8/ 0/12| 0/ 0/20|
+||800 sim|12/ 0/ 8||2/ 0/18| 0/ 0/20|
+||1600 sim|1/ 0/19||||
+||3200 sim|3/ 0/17||||
+||6400 sim|5/ 0/15||||
 
 
 Credit
