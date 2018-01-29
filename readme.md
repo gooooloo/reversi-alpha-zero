@@ -115,19 +115,10 @@ pythonw -m src.reversi_zero.run play_gui --env reversi --http-url http://192.168
 Play with NTest
 ---------
 
-[NTest](https://github.com/weltyc/ntest) is a very strong Reversi AI. We can play with it automatically. 
+[NTest](https://github.com/weltyc/ntest) is a very strong Reversi AI. We can play with it automatically. Just modify `batch.ntest.sh` and run.
 
 ```bash
-python3.6 -m src.reversi_zero.run elo_p1_ntest --env reversi --n-workers 2 --n-games 4 --ntest-depth 20 --ask-model true
-```
-
-```bash
-python3.6 -m src.reversi_zero.run elo_p1_ntest --env reversi --n-workers 2 --n-games 4 --n-sims 3200 --n-steps-model 421600
-```
-
-```bash
-# save the game as ggf in specific location.
-python3.6 -m src.reversi_zero.run elo_p1_ntest --env reversi --n-workers 2 --n-games 4 --n-sims 3200 --n-steps-model 421600 --save-versus-dir /tmp/
+. ./batch.ntest.sh
 ```
 
 Play between different generations of model
