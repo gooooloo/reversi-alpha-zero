@@ -82,7 +82,7 @@ class VersusWorkerBase:
                         else True if self.config.opts.p1_first == 'always' \
                         else False if self.config.opts.p1_first == 'never' \
                         else None
-                    assert info.p1_first is not None
+                    assert info.p1_first is not None, f'--p1-first could only be "always" or "never", or do not use it'
                     pps = copy.copy(info.game_pipe_pair)
                     info.process = self.start_1_game_process(pps, p1_first=info.p1_first)
                     info.result_pipe_pair.open_read_nonblock()
@@ -130,8 +130,7 @@ class VersusWorker(VersusWorkerBase):
 
     def start_1_game_process(self, pps, p1_first):
         cmd = build_child_cmd(type='versus_a_game_kernel', config=self.config, pipe_pairs=pps)
-        if self.config.opts.p1_first:
-            cmd.extend(['--p1-first', self.config.opts.p1_first])
+        cmd.extend(['--p1-first', f'{p1_first}'])
         if self.config.opts.save_versus_dir:
             cmd.extend(["--save-versus-dir", self.config.opts.save_versus_dir])
 

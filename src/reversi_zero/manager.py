@@ -107,8 +107,10 @@ def setup(config: Config, args, setup_logger_flag):
         config.opts.p2_n_sims = args.p2_n_sims
     config.opts.league_result = args.league_result
     if args.p1_first:
-        config.opts.p1_first = args.p1_first
-        assert config.opts.p1_first in ('always', 'never'), 'only "always" or "never" is accepted for "--p1-first"'
+        if args.p1_first in ('always', 'never'):
+            config.opts.p1_first = args.p1_first
+        else:
+            config.opts.p1_first = str2bool(args.p1_first)
     config.opts.ntest_depth = args.ntest_depth
     config.opts.save_versus_dir = args.save_versus_dir
     config.opts.p1_name = args.p1_name

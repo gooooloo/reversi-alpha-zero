@@ -22,9 +22,8 @@ class VersusNTestWorker(VersusWorkerBase):
             '--ntest-depth', f'{self.config.opts.ntest_depth}',
             '--p1-name', self.config.opts.p1_name,
             '--p2-name', self.config.opts.p2_name,
+            '--p1-first', f'{p1_first}',
         ])
-        if self.config.opts.p1_first:
-            cmd.extend(['--p1-first', self.config.opts.p1_first])
         if self.config.opts.save_versus_dir:
             cmd.extend(["--save-versus-dir", self.config.opts.save_versus_dir])
         return start_child_proc(cmd=cmd, nocuda=True)
