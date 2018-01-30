@@ -220,6 +220,10 @@ For simplicity, a blank cell means losing ALL 20 games, and a '-' means not test
 |           | 200 sim|            |            |      -     |      -     |
 |           | 400 sim| **9/ 2/ 9**|            |      -     |      -     |
 |           | 800 sim|**10/ 0/10**|            |      -     |      -     |
+|step-442500| 100 sim|            |            |            |            |
+|           | 200 sim|            |            |            |            |
+|           | 400 sim|**16/ 0/ 4**|            |            |            |
+|           | 800 sim|**19/ 0/ 1**|   0/ 5/15  |            |            |
 
 
 Credit
