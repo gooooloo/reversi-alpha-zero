@@ -26,14 +26,19 @@ class GGF:
                  f'DT[{time}]' \
                  f'PB[{self.black_name}]' \
                  f'PW[{self.white_name}]' \
-                 f'RE[{self.black_score}:{self.white_score}]' \
-                 f'TI[?]' \
+                 f'RE[{self.black_score}{self.white_score}]' \
                  f'TY[8]' \
                  f'BO[8 ---------------------------*O------O*--------------------------- *                     ]' \
                  f'{self.moves}' \
                  f';)'
 
-        filename = os.path.join(dir, f'reversi-{time}-{self.get_result()}.ggf')
+        filename = f'reversi-' \
+                   f'{self.black_name}-' \
+                   f'{self.white_name}-' \
+                   f'{self.black_score}_{self.white_score}-' \
+                   f'{time}.ggf'
+        filename = filename.replace(':', '_')
+        filename = os.path.join(dir,filename)
         with open(filename, 'wt') as f:
             f.write(string)
 
