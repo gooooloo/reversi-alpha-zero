@@ -139,10 +139,10 @@ class ReversiModelAPIProxy:
         self.pipe_pair.write_nonblock(byte_length.to_bytes(4, 'big'))
         self.pipe_pair.write_nonblock(x.data)
 
-        y = self.pipe_pair.read_exact(buffer_size=4, allow_empty=False)
+        y = self.pipe_pair.read_exact(buffer_size=4, allow_empty=False, sleep_second=0.001)
         to_read_len = int.from_bytes(y, 'big')
         assert to_read_len > 0
-        y = self.pipe_pair.read_exact(buffer_size=to_read_len, allow_empty=False)
+        y = self.pipe_pair.read_exact(buffer_size=to_read_len, allow_empty=False, sleep_second=0.001)
 
         y = np.frombuffer(y, dtype=BUFFER_DTYPE)
         assert len(y) == batch_number * (self.config.model.policy_size + 1), \
