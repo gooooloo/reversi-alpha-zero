@@ -70,6 +70,7 @@ class VersusPlayWorkerBase:
                 break
 
         final_score = p1.final_score()
+        ggf.set_final_score(final_score)
 
         if self.config.opts.save_versus_dir:
             ggf.write_to_file(self.config.opts.save_versus_dir)
