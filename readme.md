@@ -16,7 +16,7 @@ Environment
 Download Pretrained Model to Play with
 ==========
 
-[here](https://github.com/gooooloo/reversi-alpha-zero-models)
+[Here](https://github.com/gooooloo/reversi-alpha-zero-models)
 
 
 Training Pipeline Examples
@@ -224,6 +224,10 @@ For simplicity, a blank cell means losing ALL 20 games, and a '-' means not test
 |           | 200 sim|            |            |            |            |
 |           | 400 sim|**16/ 0/ 4**|            |            |            |
 |           | 800 sim|**19/ 0/ 1**|   0/ 5/15  |            |            |
+|step-444900| 100 sim|            |            | **0/20/ 0**|            |
+|           | 200 sim|            |            | **0/20/ 0**|            |
+|           | 400 sim|   1/ 0/19  |   0/ 3/17  |   0/13/ 7  |            |
+|           | 800 sim|   7/ 1/12  |   0/ 5/15  |   0/11/ 9  |            |
 
 
 Credit
