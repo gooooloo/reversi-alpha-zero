@@ -185,26 +185,31 @@ Records 3
 
 Rule: play with NTest. `NTest:xxx` means NTest with strenth xxx. 
 
-For simplicity, a blank cell means losing ALL 20 games, and a '-' means not tested.
+For simplicity, a blank cell means losing ALL 10 games, and a '-' means not tested.
+
+|           |        |  NTest:5   |  NTest:6   |  NTest:7   |  NTest:8   |  NTest:9   |
+|-----------|-------:|:----------:|:----------:|:----------:|:----------:|:----------:|
+|step-350400| 100 sim|   5/0/5    |            |   0/3/7    |            |            |
+
 
 |           |        |  NTest:10  |  NTest:11  |  NTest:12  |  NTest:13  |
 |-----------|-------:|:----------:|:----------:|:----------:|:----------:|
-|step-386400| 100 sim|            |            |            |            |
-|           | 200 sim|            |   0/ 2/18  |            |            |
-|           | 400 sim|   0/ 3/17  | **0/20/ 0**|            |            |
-|           | 800 sim|            | **0/20/ 0**|            |            |
-|step-391200| 100 sim|            |            |            |            |
+|step-386400| 100 sim|    1/0/9   |            |            |            |
+|           | 200 sim|            |            |            |            |
+|           | 400 sim|    0/1/9   |   0/5/5    |            |            |
+|           | 800 sim|            |   0/5/5    |            |            |
+|step-391200| 100 sim|            |            |    0/1/9   |            |
 |           | 200 sim|            |            |            |            |
 |           | 400 sim|            |            |            |            |
-|           | 800 sim|            |   0/ 1/19  |   5/ 0/15  |   5/ 0/15  |
+|           | 800 sim|            |            |    1/0/9   |            |
 |step-401600| 100 sim|            |            |            |            |
 |           | 200 sim|            |            |            |            |
-|           | 400 sim|            |            |   0/ 4/16  |            |
+|           | 400 sim|            |            |    0/1/9   |            |
 |           | 800 sim|            |            |            |            |
 |step-406400| 100 sim|            |            |            |            |
-|           | 200 sim|            |            |            |            |
-|           | 400 sim|            | **0/19/ 1**|   1/ 0/19  |   0/ 1/19  |
-|           | 800 sim|            |            |   0/ 7/13  |   0/12/ 8  |
+|           | 200 sim|    0/3/7   |            |            |            |
+|           | 400 sim|            |   0/4/6    |            |    0/1/9   |
+|           | 800 sim|            |   0/1/9    |    0/2/8   |    0/2/8   |
 
 
 Credit
