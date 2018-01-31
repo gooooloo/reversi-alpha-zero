@@ -153,6 +153,9 @@ Rule: Play with this [iOS APP](https://itunes.apple.com/cn/app/id574915961). For
 - step-67200 (100sim): lose level 17...
 - step-69600 (100sim): lose level 17...
 - step-69600 (2000sim): won level 17 (level 18 not tested)
+
+Starting from about step 100000, I change simulations_per_move in selfplay from 100 to 800.
+
 - step-116000 (2000sim): won level 18,19,20,21,22,23,24,25,26,27,28,29,30
 - step-116000 (800sim): lose level 29
 - step-155200 (2000sim): won level 32 (level 33 not tested)
@@ -190,6 +193,13 @@ For simplicity, a blank cell means losing ALL 10 games, and a '-' means not test
 |           |        |  NTest:5   |  NTest:6   |  NTest:7   |  NTest:8   |  NTest:9   |
 |-----------|-------:|:----------:|:----------:|:----------:|:----------:|:----------:|
 |step-350400| 100 sim|   5/0/5    |            |   0/3/7    |            |            |
+|           | 200 sim|   5/0/5    |            |            |   0/4/6    |            |
+|           | 400 sim|   8/0/2    |    2/0/8   |   1/2/7    |   0/5/5    |            |
+|           | 800 sim|   1/4/5    |    5/0/5   |   3/0/7    |   3/2/5    |   0/2/8    |
+|step-386400| 100 sim|            |    3/0/7   |   0/1/9    |   4/0/6    |            |
+|           | 200 sim|   5/0/5    |    7/0/3   |            |   5/0/5    |            |
+|           | 400 sim|   4/0/6    | **10/0/0** |   3/0/7    |   4/0/6    |   2/0/8    |
+|           | 800 sim|   2/1/7    |    7/0/3   |   1/2/7    |   5/0/5    |            |
 
 
 |           |        |  NTest:10  |  NTest:11  |  NTest:12  |  NTest:13  |
@@ -210,6 +220,13 @@ For simplicity, a blank cell means losing ALL 10 games, and a '-' means not test
 |           | 200 sim|    0/3/7   |            |            |            |
 |           | 400 sim|            |   0/4/6    |            |    0/1/9   |
 |           | 800 sim|            |   0/1/9    |    0/2/8   |    0/2/8   |
+|step-411300| 100 sim|            |            |            |            |
+|           | 200 sim|            |            |            |            |
+|           | 400 sim|            |            |            |            |
+|           | 800 sim|            |            |    2/0/8   |            |
+
+
+Starting from step 411400, I increase computing sources for self-play.
 
 
 Credit
