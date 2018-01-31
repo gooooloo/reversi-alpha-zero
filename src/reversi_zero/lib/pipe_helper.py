@@ -117,7 +117,7 @@ class PipePair:
             y = self.try_read_allow_empty(max_buffer_size)
         return y
 
-    def read_exact(self, buffer_size, allow_empty):
+    def read_exact(self, buffer_size, allow_empty, sleep_second=None):
         assert self.pipe_in, 'have you called open_read_nonblock()?'
 
         all_x = bytes()
@@ -134,9 +134,14 @@ class PipePair:
                     all_x = b''.join([all_x, x])
                 else:
                     pass
+
+                if sleep_second:
+                    time.sleep(sleep_second)
+
             except OSError as err:
                 if err.errno == errno.EAGAIN or err.errno == errno.EWOULDBLOCK:
-                    pass
+                    if sleep_second:
+                        time.sleep(sleep_second)
                 else:
                     raise
         return all_x
