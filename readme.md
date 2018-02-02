@@ -134,7 +134,7 @@ python3.6 -m src.reversi_zero.run league --env reversi --n-workers 4
 Strength Records
 ==========
 
-see 'records.sh' in this folder.
+see [records.sh](https://github.com/gooooloo/reversi-alpha-zero/blob/master/records.md) in this folder.
 
 Credit
 ==========
