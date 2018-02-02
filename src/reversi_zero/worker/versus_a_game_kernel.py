@@ -77,7 +77,7 @@ class VersusPlayWorkerBase:
 
         self.pipe_files.clear_pipes()
 
-        black, white = final_score
+        black, white = [int(x) for x in final_score]
 
         if self.config.opts.p1_first:
             p1, p2 = black, white
