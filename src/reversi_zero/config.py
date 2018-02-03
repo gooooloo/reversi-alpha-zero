@@ -35,6 +35,8 @@ class Config:
 
         self.eval = env_specific.EvalConfig()
 
+        self.time = env_specific.TimeConfig()
+
 
 class Options:
     pipe_pairs = None
@@ -59,6 +61,7 @@ class Options:
     save_versus_dir = None
     p1_name = None
     p2_name = None
+    n_minutes = None
 
 
 class ResourceConfig:

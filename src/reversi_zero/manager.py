@@ -54,6 +54,7 @@ def create_parser():
     parser.add_argument("--n-games", help="how many games to self play", type=int, default=1)
     parser.add_argument("--n-workers", help="how many processes as workers", type=int, default=1)
     parser.add_argument("--n-sims", help="how many simulations per move", type=int, default=None)
+    parser.add_argument("--n-minutes", help="how many minutes per game per player", type=int, default=None)
     parser.add_argument("--n-steps-model", help="which model( after how many training steps) to play", type=int, default=-1)
     parser.add_argument("--p1-n-sims", help="how many simulations per move for p1", type=int, default=None)
     parser.add_argument("--p2-n-sims", help="how many simulations per move for p2", type=int, default=None)
@@ -115,6 +116,9 @@ def setup(config: Config, args, setup_logger_flag):
     config.opts.save_versus_dir = args.save_versus_dir
     config.opts.p1_name = args.p1_name
     config.opts.p2_name = args.p2_name
+    if args.n_minutes is not None:
+        config.opts.n_minutes = args.n_minutes
+
     if args.n_steps_model >= 0:
         model_dir = os.path.join(config.resource.generation_model_dir, config.resource.generation_model_dirname_tmpl % args.n_steps_model)
         config.resource.model_config_path = os.path.join(model_dir, config.resource.model_config_filename)

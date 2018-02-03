@@ -4,10 +4,11 @@ from logging import getLogger
 import time
 
 from src.reversi_zero.agent.api import ReversiModelAPIProxy
-from src.reversi_zero.agent.player import EvaluatePlayer
+from src.reversi_zero.agent.player import EvaluatePlayer, TimedEvaluatePlayer
 from src.reversi_zero.config import Config, EloConfig
 from src.reversi_zero.gtp.reversi_gtp import ReversiGTPServer
 from src.reversi_zero.lib import gtp
+from src.reversi_zero.lib.time_strategy import TimeStrategy
 
 logger = getLogger()
 
@@ -76,7 +77,15 @@ class GTPGameObj(object):
         def make_sim_env_fn():
             return self.env.copy()
 
-        self.player = EvaluatePlayer(make_sim_env_fn=make_sim_env_fn, config=self.config, api=self.api)
+        if self.config.opts.n_minutes:
+            time_strategy = TimeStrategy(minutes_per_game=self.config.opts.n_minutes,
+                                         whole_move_num=self.config.time.whole_move_num,
+                                         endgame_move_num=self.config.time.endgame_move_num,
+                                         decay_factor=self.config.time.decay_factor)
+            self.player = TimedEvaluatePlayer(time_strategy=time_strategy,
+                                              make_sim_env_fn=make_sim_env_fn, config=self.config, api=self.api)
+        else:
+            self.player = EvaluatePlayer(make_sim_env_fn=make_sim_env_fn, config=self.config, api=self.api)
         self.player.prepare(self.env)
 
     def make_move(self, color, vertex):

@@ -100,6 +100,8 @@ class VersusPlayWorker(VersusPlayWorkerBase):
     @staticmethod
     def start_gtp_server_process(pipe_pairs, config):
         cmd = build_child_cmd(type='gtp_server', config=config, pipe_pairs=pipe_pairs)
+        if config.opts.n_minutes:
+            cmd.extend(['--n-minutes', f'{config.opts.n_minutes}'])
         return start_child_proc(cmd=cmd, nocuda=True)
 
     def start_p1_server(self, gtp_pipe_pair):

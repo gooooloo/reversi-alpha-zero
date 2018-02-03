@@ -133,6 +133,8 @@ class VersusWorker(VersusWorkerBase):
         cmd.extend(['--p1-first', f'{p1_first}'])
         if self.config.opts.save_versus_dir:
             cmd.extend(["--save-versus-dir", self.config.opts.save_versus_dir])
+        if self.config.opts.n_minutes:
+            cmd.extend(['--n-minutes', f'{self.config.opts.n_minutes}'])
 
         return start_child_proc(cmd=cmd, nocuda=True)
 

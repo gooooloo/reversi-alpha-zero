@@ -3,16 +3,12 @@
 import numpy as np
 import random
 
-from asyncio.queues import Queue
-from collections import namedtuple
-from logging import getLogger, WARNING
-import asyncio
+from logging import getLogger, INFO
 
+import time
 
-getLogger('asyncio').setLevel(WARNING)
 logger = getLogger(__name__)
-
-QueueItem = namedtuple("QueueItem", "node state future")
+logger.setLevel(INFO)
 
 
 class SelfPlayer(object):
@@ -47,142 +43,143 @@ class EvaluatePlayer(SelfPlayer):
         return node.full_N, node.full_Q, node.full_combined_V, node.full_P
 
 
+class TimedEvaluatePlayer(EvaluatePlayer):
+    def __init__(self, time_strategy, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.time_strategy = time_strategy
+
+    def think(self, tau=0):
+        timeout = self.time_strategy.get_seconds_for_thinking()
+        return self.game_tree.mcts_and_play(tau, timeout)
+
+    def play(self, *args, **kwargs):
+        self.time_strategy.play()
+        return super().play(*args, **kwargs)
+
+
 class GameTree(object):
     def __init__(self, make_sim_env_fn, config=None, play_config=None, api=None):
         self.make_sim_env_fn = make_sim_env_fn
         self.config = config
         self.play_config = play_config or self.config.play
         self.root_node = Node(self.play_config.c_puct)
-        self.prediction_queue = Queue(self.play_config.prediction_queue_size)
-        self.sem = asyncio.Semaphore(self.play_config.parallel_search_num)
         self.api = api
 
-        self.loop = asyncio.get_event_loop()
-        self.running_simulation_num = 0
-
         self.allow_rotate_flip_ob = True
+        self.virtual_loss = self.config.play.virtual_loss
 
     def expand_root(self, root_env):
         p, v = self.api.predict(np.asarray(root_env.observation))
         self.root_node.expand_and_evaluate(p, v, root_env.legal_moves)
 
-    def mcts_and_play(self, tau):
-        self.mcts()
+    def mcts_and_play(self, tau, timeout=None):
+        self.mcts(timeout)
         return self.play(tau)
 
     def keep_only_subtree(self, action):
         self.root_node = self.root_node.child_by_value(action)
         assert self.root_node is not None
 
-    def mcts(self):
+    def mcts(self, timeout=None):
+        # idea borrowed from https://github.com/tensorflow/minigo/blob/master/strategies.py
+
+        assert self.root_node.expanded
 
         # Question: is it correct doing it every time mcts starts, or should it be just first step of a game?
         self.root_node.add_dirichlet_noise(self.play_config.noise_eps, self.play_config.dirichlet_alpha)
 
-        self.running_simulation_num = 0
-        coroutine_list = []
-        for it in range(self.play_config.simulation_num_per_move):
-            coroutine_list.append(self.simulate())
-        coroutine_list.append(self.prediction_worker())
-        self.loop.run_until_complete(asyncio.gather(*coroutine_list))
+        deadline = time.time() + timeout if timeout else None
 
-    async def simulate(self):
-        self.running_simulation_num += 1
-        with await self.sem:
-            leaf_v = await self.simulate_internal()
-            self.running_simulation_num -= 1
-            return leaf_v
-
-    async def simulate_internal(self):
-        assert self.root_node.expanded
-
-        virtual_loss = self.config.play.virtual_loss
-        env = self.make_sim_env_fn()
-        leaf_node = None
-        leaf_v = None
-
-        cur_node = self.root_node
-
-        while leaf_node is None:
-
-            next_node = await cur_node.select_best_child_and_add_virtual_loss_lock(virtual_loss)
-
-            env.step(next_node.value)
-            if env.done:
-                leaf_node = next_node
-                leaf_v = -1 if env.last_player_wins else 1 if env.last_player_loses else 0
+        nodes_to_sim = [] if timeout else [(self.root_node, None) for _ in range(self.play_config.simulation_num_per_move)]
+        nodes_to_predict = []
+        n_sim, n_cont_sim = 0, 0
+        while True:
+            if n_sim and deadline and time.time() >= deadline:
+                break
+            if n_sim and not deadline and not nodes_to_sim:
                 break
 
-            if not next_node.expanded and not await next_node.expanded_lock():
-                v, new = await self.expand_and_evaluate(env, next_node)
-                if new:
-                    leaf_node = next_node
-                    leaf_v = v
+            n_sim += 1
+
+            nodes_to_sim = nodes_to_sim or [(self.root_node, None)]
+
+            cur_node, env = nodes_to_sim.pop(0)
+            env = env or self.make_sim_env_fn()
+
+            while True:
+                next_node = cur_node.select_best_child_and_add_virtual_loss(self.virtual_loss)
+                env.step(next_node.value)
+
+                if env.done:
+                    v = -1 if env.last_player_wins else 1 if env.last_player_loses else 0
+                    self.backup(next_node, v)
                     break
 
-            cur_node = next_node
+                if not next_node.expanded:
+                    nodes_to_predict.append((next_node, env))
+                    break
 
-        assert leaf_node is not None
-        assert leaf_v is not None
+                cur_node = next_node
 
-        v = leaf_v
+            if n_sim % self.play_config.prediction_queue_size == 0 and nodes_to_predict:
+                nodes_not_backup = self.predict_and_backup(nodes_to_predict, always_backup=False)
+                nodes_to_sim = nodes_not_backup + nodes_to_sim
+                nodes_to_predict = []
+                n_cont_sim += len(nodes_not_backup)
 
-        # backup
+        # there maybe some unpredicted nodes
+        if nodes_to_predict:
+            self.predict_and_backup(nodes_to_predict, always_backup=True)
+
+        # there maybe some ongoing nodes waiting to sim deeper
+        for node,env in nodes_to_sim:
+            if env:
+                self.substract_virtual_loss(node)
+                n_sim -= 1
+                n_cont_sim -= 1
+
+        logger.debug(f'think time: {timeout}; search times: {n_sim - n_cont_sim}')
+
+    def predict_and_backup(self, node_envs, always_backup):
+        ops = [random.randint(0, env.rotate_flip_op_count - 1)
+               if self.allow_rotate_flip_ob and env.rotate_flip_op_count > 0
+               else None
+               for _,env in node_envs]
+
+        data = np.asarray([env.observation if op is None else env.rotate_flip_ob(env.observation, op)
+                           for (_,env),op in zip(node_envs, ops)])
+
+        ps, vs = self.api.predict(data)
+
+        nodes_not_backup = []
+        for (node, env), p, v, op in zip(node_envs, ps, vs, ops):
+            if op is not None:
+                p = env.counter_rotate_flip_pi(p, op)
+            if not node.expanded:
+                node.expand_and_evaluate(p, v, env.legal_moves)
+                self.backup(node, v)
+            else:
+                if always_backup:
+                    self.backup(node, v)
+                else:
+                    nodes_not_backup.append((node, env))
+
+        return nodes_not_backup
+
+    def backup(self, leaf_node, v):
         cur_node = leaf_node
         while cur_node is not self.root_node:
             v = -v  # important: reverse v
-
             parent = cur_node.parent
-            await parent.backup_and_substract_virtual_loss_lock(virtual_loss, v, cur_node.sibling_index)
-
+            parent.backup_and_stubstract_virtual_loss(self.virtual_loss, v, cur_node.sibling_index)
             cur_node = parent
 
-        return -v  # v for root node
-
-    async def expand_and_evaluate(self, env, node):
-
-        # do it outside of synchronized block to cut down synchronization overhead.
-        ob, rotate_flip_op = np.asarray(env.observation), None
-        if self.allow_rotate_flip_ob and env.rotate_flip_op_count > 0:
-            rotate_flip_op = random.randint(0, env.rotate_flip_op_count - 1)
-            ob = env.rotate_flip_ob(ob, rotate_flip_op)
-
-        async def gen_v_future_coroutine():
-            the_future = await self.predict(ob)
-            return (the_future, rotate_flip_op)
-
-        # this will overwrite previous rotate_flip_op, it is ok.
-        (future, rotate_flip_op), new = await node.v_future_lock(gen_v_future_coroutine)
-
-        await future
-        p, v = future.result()
-
-        if rotate_flip_op is not None:
-            p = env.counter_rotate_flip_pi(p, rotate_flip_op)
-
-        await node.expand_and_evaluate_lock(p, v, env.legal_moves)
-
-        return float(v), new
-
-    async def prediction_worker(self):
-        margin = 10
-        q = self.prediction_queue
-        while self.running_simulation_num > 0 or margin > 0:
-            if q.empty():
-                margin -= 1 if margin > 0 else 0
-                await asyncio.sleep(self.config.play.prediction_worker_sleep_sec)
-                continue
-            item_list = [q.get_nowait() for _ in range(q.qsize())]
-            data = np.array([x.state for x in item_list])
-            policy_ary, value_ary = self.api.predict(data)  # policy_ary: [n, 64], value_ary: [n, 1]
-            for p, v, item in zip(policy_ary, value_ary, item_list):
-                item.future.set_result((p, v))
-
-    async def predict(self, x):
-        future = self.loop.create_future()
-        item = QueueItem(self, x, future)
-        await self.prediction_queue.put(item)
-        return future
+    def substract_virtual_loss(self, leaf_node):
+        cur_node = leaf_node
+        while cur_node is not self.root_node:
+            parent = cur_node.parent
+            parent.substract_virtual_loss(self.virtual_loss, cur_node.sibling_index)
+            cur_node = parent
 
     # those illegal actions are with full_N == 0, so won't be played
     def play(self, tau):
@@ -226,10 +223,6 @@ class Node(object):
         self.Q = None
         self.N = None
         self.v = 0.
-
-        self.lock = asyncio.Lock()
-
-        self.v_future = None
 
         # below variables are only for speeding up MCTS
         self._sum_n = None
@@ -383,28 +376,4 @@ class Node(object):
         self.add_virtual_loss(virtual_loss, next_node.sibling_index)
 
         return next_node
-
-    async def expanded_lock(self):
-        with await self.lock:
-            return self.expanded
-
-    async def expand_and_evaluate_lock(self, *args, **kwargs):
-        with await self.lock:
-            return self.expand_and_evaluate(*args, **kwargs)
-
-    async def select_best_child_and_add_virtual_loss_lock(self, *args, **kwargs):
-        with await self.lock:
-            return self.select_best_child_and_add_virtual_loss(*args, **kwargs)
-
-    async def backup_and_substract_virtual_loss_lock(self, *args, **kwargs):
-        with await self.lock:
-            return self.backup_and_stubstract_virtual_loss(*args, **kwargs)
-
-    async def v_future_lock(self, gen_v_future_coroutine):
-        with await self.lock:
-            new = False
-            if not self.v_future:
-                self.v_future = await gen_v_future_coroutine()
-                new = True
-            return self.v_future, new
 

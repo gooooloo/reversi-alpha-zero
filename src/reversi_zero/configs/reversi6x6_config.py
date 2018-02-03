@@ -86,3 +86,10 @@ class EvalConfig:
         self.elo_k = 32
         self.n_games = 400
         self.elo_threshold = 300
+
+
+class TimeConfig:
+    def __init__(self):
+        self.whole_move_num = 32
+        self.endgame_move_num = 10
+        self.decay_factor = 0.9

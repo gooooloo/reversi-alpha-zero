@@ -26,6 +26,8 @@ class VersusNTestWorker(VersusWorkerBase):
         ])
         if self.config.opts.save_versus_dir:
             cmd.extend(["--save-versus-dir", self.config.opts.save_versus_dir])
+        if self.config.opts.n_minutes:
+            cmd.extend(['--n-minutes', f'{self.config.opts.n_minutes}'])
         return start_child_proc(cmd=cmd, nocuda=True)
 
     def start_model_serving_processes(self, p1_model_ready_pp, p2_model_ready_pp, p1_model_pps, p2_model_pps):

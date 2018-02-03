@@ -39,11 +39,16 @@ class EloNTestWorker(EloWorkerBase):
             cmd.extend(["--save-versus-dir", self.config.opts.save_versus_dir])
         if self.config.opts.p1_first:
             cmd.extend(['--p1-first', f'{self.config.opts.p1_first}'])
+        if self.config.opts.n_minutes:
+            cmd.extend(['--n-minutes', f'{self.config.opts.n_minutes}'])
         return cmd
 
     def get_p1_name(self):
         if self.model_generation is not None:
-            return f'ARZ:{self.model_generation}:{self.config.play.simulation_num_per_move}'
+            if self.config.opts.n_minutes:
+                return f'ARZ:{self.model_generation}:{self.config.opts.n_minutes}min'
+            else:
+                return f'ARZ:{self.model_generation}:{self.config.play.simulation_num_per_move}'
         else:
             return f'ARZ:{self.config.play.simulation_num_per_move}'
 
