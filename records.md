@@ -56,7 +56,7 @@ Records 3
 Rule: play with NTest. `NTest:xxx` means NTest with strenth xxx. 
 
 For simplicity, a blank cell means losing ALL 10 games (for 30 min, it is 4 games by default), and a '-' means not tested.
-Some of winning/draw game savings can be downloaded from [here]://github.com/gooooloo/reversi-alpha-zero-models/tree/master/ggf)
+Some of winning/draw game savings can be downloaded from [here](://github.com/gooooloo/reversi-alpha-zero-models/tree/master/ggf)
 
 - Starting from step 411400, I increase computing sources for self-play.
 - Starting from step 406401, there is a bug of evaluator. I fix it at step 434700.
