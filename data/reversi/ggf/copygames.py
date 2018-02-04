@@ -67,6 +67,11 @@ if __name__ == '__main__':
             continue
 
         dest_folder = os.path.join(os.path.dirname(fn), '../../../../reversi-alpha-zero-models/ggf', f'step-{arz_gen}')
+        if arz_sim:
+            dest_folder = os.path.join(dest_folder, f'sim-{arz_sim}')
+        else:
+            dest_folder = os.path.join(dest_folder, f'min-{arz_min}')
+        dest_folder = os.path.join(dest_folder, f'ntest-{ntest_lv}')
         os.makedirs(dest_folder, exist_ok=True)
         dest = os.path.join(dest_folder, os.path.basename(fn))
         shutil.copy(fn, dest)
