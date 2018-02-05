@@ -90,6 +90,7 @@ Some of winning/draw game savings can be downloaded from [here](http://github.co
 |step-471400|  800 sim|  4/0/6  |**7/0/3**|  0/4/6  |  4/0/6  |  0/4/6  |
 |step-473800|  400 sim|**5/0/5**|  2/0/8  |  0/2/8  |  4/0/6  |  1/0/9  |
 |step-473800|  800 sim|**7/0/3**|**8/0/2**|  4/0/6  |  4/0/6  |         |
+|step-473800|   30 min|   -     |   -     |**2/1/1**|**4/0/0**|**4/0/0**|
 
 
 |           |         |Ntest:10 |Ntest:11 |Ntest:12 |Ntest:13 |
@@ -142,5 +143,4 @@ Some of winning/draw game savings can be downloaded from [here](http://github.co
 |step-453800|   30 min|         |         |         |
 |step-453800|  400 sim|         |         |         |
 |step-453800|  800 sim|         |         |         |
-
-
+|step-473800|  800 sim|  0/1/9  |         |  0/2/8  |
