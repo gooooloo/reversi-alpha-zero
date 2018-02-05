@@ -84,6 +84,8 @@ Some of winning/draw game savings can be downloaded from [here](http://github.co
 |step-418500|  100 sim|   -     |   -     |   -     |   -     |  3/0/7  |
 |step-418500|  400 sim|  1/2/7  |**6/1/3**|  0/4/6  |  0/3/7  |**7/0/3**|
 |step-418500|  800 sim|**3/5/2**|**5/0/5**|  4/0/6  |  3/3/4  |**5/0/5**|
+|step-442600|  800 sim|**10/0/0**| 3/0/7  |  1/0/9  |**6/0/4**|  3/0/7  |
+
 
 
 
