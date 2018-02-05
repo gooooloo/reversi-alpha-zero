@@ -53,7 +53,7 @@ Model step-350400 can be downloaded from [here](https://github.com/gooooloo/reve
 Records 3
 ---------
 
-Rule: play with NTest. `NTest:xxx` means NTest with strenth xxx. 
+Rule: play with NTest. `NTest:xxx` means NTest with strenth xxx. `x/y/z` means x wins, y draws, z loses.
 
 For simplicity, a blank cell means losing ALL 10 games (for 30 min, it is 4 games by default), and a '-' means not tested.
 Some of winning/draw game savings can be downloaded from [here](http://github.com/gooooloo/reversi-alpha-zero-models/tree/master/ggf)
