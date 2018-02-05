@@ -9,8 +9,8 @@ class PlayDataConfig:
         # But I reduce to nb_game_in_file * max_file_num == 50,000 due to performance trade-off.
         # Small nb_game_in_file make training data update more frequently, but
         # large max_file_num make larger overhead reading file
-        self.nb_game_in_file = 50           # MOKE: 5
-        self.max_file_num = 1000            # MOKE: 2000
+        self.nb_game_in_file = 5            # MOKE: 5
+        self.max_file_num = 10000           # MOKE: 2000
 
 
 class PlayConfig:
