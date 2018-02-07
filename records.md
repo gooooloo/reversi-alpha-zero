@@ -68,7 +68,7 @@ Some of winning/draw game savings can be downloaded from [here](http://github.co
 |step-350400|  400 sim|**8/0/2**|  2/0/8  |  1/2/7  |  0/5/5  |         |
 |step-350400|  800 sim|  1/4/5  |**5/0/5**|  3/0/7  |  3/2/5  |  0/2/8  |
 |step-386400|  100 sim|         |  3/0/7  |  0/1/9  |  4/0/6  |         |
-|step-386400|  200 sim|**5/0/5  |**7/0/3**|         |**5/0/5**|         |
+|step-386400|  200 sim|**5/0/5**|**7/0/3**|         |**5/0/5**|         |
 |step-386400|  400 sim|  4/0/6  |**10/0/0**| 3/0/7  |  4/0/6  |  2/0/8  |
 |step-386400|  800 sim|  2/1/7  |**7/0/3  |  1/2/7  |**5/0/5**|         |
 |step-406400|  100 sim|         |  4/0/6  |         |  4/0/6  |         |
@@ -92,6 +92,9 @@ Some of winning/draw game savings can be downloaded from [here](http://github.co
 |step-473800|  800 sim|**7/0/3**|**8/0/2**|  4/0/6  |  4/0/6  |         |
 |step-473800|   30 min|   -     |   -     |**2/1/1**|**4/0/0**|**4/0/0**|
 |step-482600|  800 sim|**8/2/0**|**6/0/4**|**5/0/5**|  0/1/9  |  2/2/6  |
+|step-485800|   30 min|**4/0/0**|**4/0/0**|**4/0/0**|**4/0/0**|**3/0/1**|
+|step-497000|  800 sim|   -     |   -     |  3/0/7  |**5/0/5**|  4/0/6  |
+
 
 
 |           |         |Ntest:10 |Ntest:11 |Ntest:12 |Ntest:13 |
@@ -133,6 +136,9 @@ Some of winning/draw game savings can be downloaded from [here](http://github.co
 |step-473800|  800 sim|  1/0/9  |         |  2/0/8  |  3/0/7  |
 |step-473800|   30 min|**4/0/0**|**2/0/2**|**2/2/0**|**3/1/0**|
 |step-482600|  800 sim|  0/8/2  |  0/5/5  |         |         |
+|step-485800|   30 min|**2/0/2**|  1/0/3  |**2/1/1**|  1/1/2  |
+|step-497000|  800 sim|  1/0/9  |  2/5/3  |  1/0/9  |         |
+
 
 
 |           |         |Ntest:14 |Ntest:15 |Ntest:16 |
@@ -146,4 +152,7 @@ Some of winning/draw game savings can be downloaded from [here](http://github.co
 |step-453800|   30 min|         |         |         |
 |step-453800|  400 sim|         |         |         |
 |step-453800|  800 sim|         |         |         |
+|step-473800|   30 min|  0/2/2  |   -     |   -     |
 |step-473800|  800 sim|  0/1/9  |         |  0/2/8  |
+|step-485800|   30 min|  0/1/3  |         |  1/0/3  |
+
