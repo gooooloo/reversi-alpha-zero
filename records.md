@@ -58,6 +58,8 @@ Rule: play with NTest. `NTest:xxx` means NTest with strenth xxx. `x/y/z` means x
 For simplicity, a blank cell means losing ALL 10 games (for 30 min, it is 4 games by default), and a '-' means not tested.
 Some of winning/draw game savings can be downloaded from [here](http://github.com/gooooloo/reversi-alpha-zero-models/tree/master/ggf)
 
+Why use 30 min? Actually I am targeting 5 min C++ implementation on a 8-core CPU, 1-GPU machine. But I don't have a C++ implementation yet, so I try a python with 30 min. I believe they will be similar in simulation_number_per_move, which is about 13000.
+
 - Starting from step 411400, I increase computing sources for self-play. As a result, the selfplay speed raises from about 500 games per hour to about 1150 games per hour (with 800 simlulations per move). Opt speed keeps not changed, 12 minutes training 100 steps.
 - Starting from step 406401, there is a bug of evaluator. I fix it at step 434700.
 
