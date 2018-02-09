@@ -98,7 +98,6 @@ Why use 30 min? Actually I am targeting 5 min C++ implementation on a 8-core CPU
 |step-497000|  800 sim|   -     |   -     |  3/0/7  |**5/0/5**|  4/0/6  |
 
 
-
 |           |         |Ntest:10 |Ntest:11 |Ntest:12 |Ntest:13 |
 |-----------|--------:|:-------:|:-------:|:-------:|:-------:|
 |step-386400|  100 sim|  1/0/9  |         |         |         |
@@ -140,7 +139,7 @@ Why use 30 min? Actually I am targeting 5 min C++ implementation on a 8-core CPU
 |step-482600|  800 sim|  0/8/2  |  0/5/5  |         |         |
 |step-485800|   30 min|**2/0/2**|  1/0/3  |**2/1/1**|  1/1/2  |
 |step-497000|  800 sim|  1/0/9  |  2/5/3  |  1/0/9  |         |
-
+|step-513800|  800 sim|  1/0/9  |         |**6/0/4**|  0/1/9  |
 
 
 |           |         |Ntest:14 |Ntest:15 |Ntest:16 |
@@ -157,4 +156,4 @@ Why use 30 min? Actually I am targeting 5 min C++ implementation on a 8-core CPU
 |step-473800|   30 min|  0/2/2  |   -     |   -     |
 |step-473800|  800 sim|  0/1/9  |         |  0/2/8  |
 |step-485800|   30 min|  0/1/3  |         |  1/0/3  |
-
+|step-513800|  800 sim|         |         |         |
