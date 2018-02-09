@@ -10,7 +10,7 @@ if __name__ == '__main__':
         def __repr__(self):
             return f'{self.win}/{self.draw}/{self.lose}'
 
-    d = defaultdict(lambda : defaultdict(lambda : defaultdict(lambda : Result())))
+    d = defaultdict(lambda : defaultdict(lambda : defaultdict(lambda : defaultdict(lambda: Result()))))
 
     ntest_lv_set = set()
     arz_gen_set  = set()
@@ -27,6 +27,7 @@ if __name__ == '__main__':
             arz_min = None
             ntest_score = int(m.group(4))
             arz_score = int(m.group(5))
+            arz_black = False
 
         p = re.compile('.*reversi-NTest_(\d*)-ARZ_(\d*)_(\d*)min-(\d*)_(\d*).*ggf$')
         m = p.match(fn)
@@ -37,6 +38,7 @@ if __name__ == '__main__':
             arz_min = int(m.group(3))
             ntest_score = int(m.group(4))
             arz_score = int(m.group(5))
+            arz_black = False
 
         p = re.compile('.*reversi-ARZ_(\d*)_(\d*)-NTest_(\d*)-(\d*)_(\d*).*ggf$')
         m = p.match(fn)
@@ -47,6 +49,7 @@ if __name__ == '__main__':
             ntest_lv = int(m.group(3))
             arz_score = int(m.group(4))
             ntest_score = int(m.group(5))
+            arz_black = True
 
         p = re.compile('.*reversi-ARZ_(\d*)_(\d*)min-NTest_(\d*)-(\d*)_(\d*).*ggf$')
         m = p.match(fn)
@@ -57,6 +60,7 @@ if __name__ == '__main__':
             ntest_lv = int(m.group(3))
             arz_score = int(m.group(4))
             ntest_score = int(m.group(5))
+            arz_black = True
 
         if ntest_lv is None:
             continue
@@ -66,49 +70,55 @@ if __name__ == '__main__':
 
         arz_sim_min = f'{arz_sim} sim' if arz_sim else f'{arz_min} min'
         if arz_score > ntest_score:
-            d[arz_gen][arz_sim_min][ntest_lv].win += 1
+            d[arz_gen][arz_sim_min][ntest_lv][arz_black].win += 1
         if arz_score == ntest_score:
-            d[arz_gen][arz_sim_min][ntest_lv].draw += 1
+            d[arz_gen][arz_sim_min][ntest_lv][arz_black].draw += 1
         if arz_score < ntest_score:
-            d[arz_gen][arz_sim_min][ntest_lv].lose += 1
+            d[arz_gen][arz_sim_min][ntest_lv][arz_black].lose += 1
 
     gen_set = set(x for x in d)
-    gen_set = [x for x in gen_set if x > 432200]
+    #gen_set = [x for x in gen_set if x == 513800]
     sim_min_set = set(y for x in d for y in d[x] )
     ntest_lv_set = set(z for x in d for y in d[x] for z in d[x][y])
-    #ntest_lv_set = [x for x in ntest_lv_set if  x > 13]
-    ntest_lv_set = [x for x in ntest_lv_set if  14 > x > 9]
+    ntest_lv_set1 = [x for x in ntest_lv_set if  5 <= x < 8]
+    ntest_lv_set2= [x for x in ntest_lv_set if 8 <= x < 11]
+    ntest_lv_set3= [x for x in ntest_lv_set if 11 <= x < 14]
+    ntest_lv_set4= [x for x in ntest_lv_set if 14 <= x]
 
-    s = ''
-    s += '|           |         |'
-    for ntest_lv in sorted(list(ntest_lv_set)):
-        s += f'Ntest:{ntest_lv:2} |'
-    s += '\n'
-    s += '|-----------|--------:|'
-    for _ in sorted(list(ntest_lv_set)):
-        s += ':-------:|'
-    s += '\n'
+    for ntest_lv_set in (ntest_lv_set1, ntest_lv_set2, ntest_lv_set3, ntest_lv_set4):
+        s = ''
+        s += '|           |         |'
+        for ntest_lv in sorted(list(ntest_lv_set)):
+            s += f'  Ntest:{ntest_lv:2} |'
+            s += f'  Ntest:{ntest_lv:2} |'
+        s += '\n'
+        s += '|-----------|--------:|'
+        for _ in sorted(list(ntest_lv_set)):
+            s += ':---------:|'
+            s += ':---------:|'
+        s += '\n'
 
-    for gen in sorted(list(gen_set)):
-        for sim_min in sorted(list(sim_min_set)):
-            if sim_min not in d[gen]:
-                continue
+        for gen in sorted(list(gen_set)):
+            for sim_min in sorted(list(sim_min_set)):
+                if sim_min not in d[gen]:
+                    continue
 
-            s += f'|step-{gen:6}|'
-            s += f'           {sim_min}|'[-10:]
-            for ntest_lv in sorted(list(ntest_lv_set)):
-                e = d[gen][sim_min][ntest_lv]
-                if e.win == 0 and e.draw == 0 and e.lose == 0:
-                    s += '   -     |'
-                elif e.win == 0 and e.draw == 0:
-                    s += '         |'
-                elif e.win >= e.lose:
-                    if e.win > 9:
-                        s += f'              **{e.win}/{e.draw}/{e.lose}**|'[-11:]
-                    else:
-                        s += f'              **{e.win}/{e.draw}/{e.lose}**|'[-10:]
-                else:
-                    s += f'                {e.win}/{e.draw}/{e.lose}  |'[-10:]
-            s += '\n'
+                s += f'|step-{gen:6}|'
+                s += f'           {sim_min}|'[-10:]
+                for ntest_lv in sorted(list(ntest_lv_set)):
+                    for side in (True, False):
+                        e = d[gen][sim_min][ntest_lv][side]
+                        if e.win == 0 and e.draw == 0 and e.lose == 0:
+                            s += '     -     |'
+                        elif e.win == 0 and e.draw == 0:
+                            s += '           |'
+                        elif e.win >= e.lose:
+                            if e.win > 9:
+                                s += f'              **{"B" if side else "W"} {e.win}/{e.draw}/{e.lose}**|'[-13:]
+                            else:
+                                s += f'              **{"B" if side else "W"} {e.win}/{e.draw}/{e.lose}**|'[-12:]
+                        else:
+                            s += f'                    {"B" if side else "W"} {e.win}/{e.draw}/{e.lose}  |'[-12:]
+                s += '\n'
 
-    print(s)
+        print(s)
