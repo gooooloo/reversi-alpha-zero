@@ -40,7 +40,9 @@ class HTTPServerWorker:
 
         http_server = HttpServer(pipe_pairs[1], self.config.opts.http_port)
         if self.parent_pipe_pair:
-            self.parent_pipe_pair.write_nonblock('ready'.encode())
+            self.parent_pipe_pair.open_write_nonblock()
+            self.parent_pipe_pair.write('ready'.encode())
+            self.parent_pipe_pair.close_write()
         http_server.start()
 
     def start_gtp_server_process(self, pipe_pairs):

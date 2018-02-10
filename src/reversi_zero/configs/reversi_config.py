@@ -106,3 +106,8 @@ class TimeConfig:
         self.whole_move_num = 60
         self.endgame_move_num = 20
         self.decay_factor = 0.9
+
+
+class ModelCacheConfig:
+    def __init__(self):
+        self.model_cache_size = None  # 10000000 takes about 5GB memory

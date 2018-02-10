@@ -12,8 +12,8 @@ logger.setLevel(INFO)
 
 
 class SelfPlayer(object):
-    def __init__(self, make_sim_env_fn, config, api, play_config=None):
-        self.game_tree = GameTree(make_sim_env_fn=make_sim_env_fn, config=config, api=api, play_config=play_config)
+    def __init__(self, make_sim_env_fn, config, api, play_config=None, model_cache=None):
+        self.game_tree = GameTree(make_sim_env_fn=make_sim_env_fn, config=config, api=api, play_config=play_config, model_cache=model_cache)
 
     def prepare(self, root_env):
         self.game_tree.expand_root(root_env=root_env)
@@ -58,12 +58,13 @@ class TimedEvaluatePlayer(EvaluatePlayer):
 
 
 class GameTree(object):
-    def __init__(self, make_sim_env_fn, config=None, play_config=None, api=None):
+    def __init__(self, make_sim_env_fn, config=None, play_config=None, api=None, model_cache=None):
         self.make_sim_env_fn = make_sim_env_fn
         self.config = config
         self.play_config = play_config or self.config.play
         self.root_node = Node(self.play_config.c_puct)
         self.api = api
+        self.model_cache = model_cache
 
         self.allow_rotate_flip_ob = True
         self.virtual_loss = self.config.play.virtual_loss
@@ -116,7 +117,20 @@ class GameTree(object):
                     break
 
                 if not next_node.expanded:
-                    nodes_to_predict.append((next_node, env))
+
+                    if self.model_cache:
+                        ob, op = self.random_symmetric_ob(env)
+                        cache = self.model_cache.query(env.compress_ob(ob))
+                    else:
+                        cache, op = None, None
+
+                    if cache:
+                        p,v = cache
+                        p = p if op is None else env.counter_rotate_flip_pi(p, op)
+                        next_node.expand_and_evaluate(p, v, env.legal_moves)
+                        self.backup(next_node, v)
+                    else:
+                        nodes_to_predict.append((next_node, env))
                     break
 
                 cur_node = next_node
@@ -140,21 +154,29 @@ class GameTree(object):
 
         logger.debug(f'think time: {timeout}; search times: {n_sim - n_cont_sim}')
 
+    def random_symmetric_ob(self, env):
+        op = random.randint(0, env.rotate_flip_op_count - 1) \
+            if self.allow_rotate_flip_ob and env.rotate_flip_op_count > 0 \
+            else None
+        ob = env.observation if op is None else env.rotate_flip_ob(env.observation, op)
+
+        return ob, op
+
     def predict_and_backup(self, node_envs, always_backup):
-        ops = [random.randint(0, env.rotate_flip_op_count - 1)
-               if self.allow_rotate_flip_ob and env.rotate_flip_op_count > 0
-               else None
-               for _,env in node_envs]
+        ob_ops = [self.random_symmetric_ob(env) for _,env in node_envs]
+        ops = [x[1] for x in ob_ops]
+        obs = np.asarray([x[0] for x in ob_ops])
 
-        data = np.asarray([env.observation if op is None else env.rotate_flip_ob(env.observation, op)
-                           for (_,env),op in zip(node_envs, ops)])
-
-        ps, vs = self.api.predict(data)
+        ps, vs = self.api.predict(obs)
 
         nodes_not_backup = []
-        for (node, env), p, v, op in zip(node_envs, ps, vs, ops):
+        for (node, env), p, v, ob, op in zip(node_envs, ps, vs, obs, ops):
+            if self.model_cache:
+                self.model_cache.suggest(env.compress_ob(ob), p, v)
+
             if op is not None:
                 p = env.counter_rotate_flip_pi(p, op)
+
             if not node.expanded:
                 node.expand_and_evaluate(p, v, env.legal_moves)
                 self.backup(node, v)

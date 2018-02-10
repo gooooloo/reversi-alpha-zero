@@ -93,3 +93,8 @@ class TimeConfig:
         self.whole_move_num = 32
         self.endgame_move_num = 10
         self.decay_factor = 0.9
+
+
+class ModelCacheConfig:
+    def __init__(self):
+        self.model_cache_size = None

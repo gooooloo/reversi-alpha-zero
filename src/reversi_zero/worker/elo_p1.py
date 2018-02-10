@@ -23,7 +23,9 @@ class EloWorkerBase:
         p1_win, p1_draw, p1_lose = result
         p1_elo = self.compute_elo(p1_win, p1_draw)
         if self.parent_pipe_pair:
-            self.parent_pipe_pair.write_nonblock(f'{p1_elo},{p1_win},{p1_draw},{p1_lose}'.encode())
+            self.parent_pipe_pair.open_write_nonblock()
+            self.parent_pipe_pair.write(f'{p1_elo},{p1_win},{p1_draw},{p1_lose}'.encode())
+            self.parent_pipe_pair.close_write()
         else:
             print(f'p1_elo:{p1_elo},win:{p1_win},draw:{p1_draw},lose:{p1_lose}'.encode())
 

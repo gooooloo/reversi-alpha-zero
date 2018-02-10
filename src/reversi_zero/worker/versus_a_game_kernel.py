@@ -90,7 +90,9 @@ class VersusPlayWorkerBase:
             final_score = 'lose'
         else:
             final_score = 'draw'
-        self.parent_pipe_pair.write_nonblock(f'{final_score}'.encode())
+        self.parent_pipe_pair.open_write_nonblock()
+        self.parent_pipe_pair.write(f'{final_score}'.encode())
+        self.parent_pipe_pair.close_write()
 
 
 class VersusPlayWorker(VersusPlayWorkerBase):

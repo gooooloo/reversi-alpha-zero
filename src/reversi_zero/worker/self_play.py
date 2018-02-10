@@ -19,6 +19,13 @@ class SelfWorker:
         assert not self.config.opts.pipe_pairs
         self.pipe_files = PipeFilesManager.new_one(self.config)
 
+    def start_model_cache_process(self, pipe_pairs):
+        cmd = build_child_cmd(type='model_cache', config=self.config, pipe_pairs=pipe_pairs)
+        cmd.extend([
+            '--model-cache-size', f'{self.config.model_cache.model_cache_size}'
+        ])
+        return start_child_proc(cmd=cmd)
+
     def start_model_serving_process(self, pipe_pairs):
         cmd = build_child_cmd(type='model_serving', config=self.config, pipe_pairs=pipe_pairs)
         cmd.extend([
@@ -43,17 +50,34 @@ class SelfWorker:
             if digest is None:
                 ps = []
 
-                pipe_pairs = self.pipe_files.make_pipes(self.config.opts.n_workers + 1)
-                p = self.start_model_serving_process(pipe_pairs)
+                pipe_pairs = self.pipe_files.make_pipes(2*self.config.opts.n_workers + 2)
+                model_serving_pps = pipe_pairs[:self.config.opts.n_workers+1]
+                model_cache_pps = pipe_pairs[self.config.opts.n_workers+1:] if self.config.model_cache.model_cache_size else None
+
+                p = self.start_model_serving_process(model_serving_pps)
                 ps.append(p)
 
-                pipe_pairs[0].reverse_in_out().read_once(99)  # having response means 'ready', whatever it is.
-                pipe_pairs = pipe_pairs[1:]
+                model_serving_pps[0].reverse_in_out().read_once(99)  # having response means 'ready', whatever it is.
+                model_serving_pps = model_serving_pps[1:]
 
-                for pp in pipe_pairs:
-                    pp = pp.reverse_in_out()
-                    p = self.start_a_self_play_process([pp])
+                if model_cache_pps:
+                    p = self.start_model_cache_process(model_cache_pps)
                     ps.append(p)
+
+                    model_cache_pps[0].reverse_in_out().read_once(99)  # having response means 'ready', whatever it is.
+                    model_cache_pps = model_cache_pps[1:]
+
+                if model_cache_pps:
+                    for pp0, pp1 in zip(model_serving_pps, model_cache_pps):
+                        pp0 = pp0.reverse_in_out()
+                        pp1 = pp1.reverse_in_out()
+                        p = self.start_a_self_play_process([pp0, pp1])
+                        ps.append(p)
+                else:
+                    for pp0 in model_serving_pps:
+                        pp0 = pp0.reverse_in_out()
+                        p = self.start_a_self_play_process([pp0])
+                        ps.append(p)
 
                 digest = fetch_model_weight_digest(self.config)
                 assert digest

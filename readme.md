@@ -41,6 +41,12 @@ python3.6 -m src.reversi_zero.run self --env reversi --n-workers 4 --gpu-memory-
 python3.6 -m src.reversi_zero.run self --env reversi --n-workers 4 --can-resign False
 ```
 
+You can also cache Neural Network prediction results in memory, to raise the speed. In my rough test, for reversi, 30,000,000 size cache causes a 25% speed up, and every 10,000,000 size uses 5GB memory. By default this cache is not open; to open it, use `--model-cache-size your_size`.
+
+```bash
+python3.6 -m src.reversi_zero.run self --env reversi --n-workers 4 --model-cache-size 10000000
+```
+
 Maintaining resignation threshold
 -------
 

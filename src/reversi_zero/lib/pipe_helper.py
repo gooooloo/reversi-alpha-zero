@@ -74,6 +74,7 @@ class PipePair:
         self.out_name = out_name
 
         self.pipe_in = None
+        self.pipe_out = None
 
     def reverse_in_out(self):
         return PipePair(self.out_name, self.in_name)
@@ -81,6 +82,7 @@ class PipePair:
     def dump_names(self):
         j = self.__dict__.copy()
         j.pop('pipe_in')
+        j.pop('pipe_out')
         return json.dumps(j)
 
     @staticmethod
@@ -97,6 +99,23 @@ class PipePair:
         assert self.pipe_in, 'have you called open_read_nonblock()?'
         os.close(self.pipe_in)
         self.pipe_in = None
+
+    def open_write_nonblock(self):
+        assert self.pipe_out is None, 'do not open twice'
+        myprint(f'start open nonblock write {self.out_name}')
+        self.pipe_out = os.open(self.out_name, os.O_WRONLY | os.O_NONBLOCK)
+        myprint(f'done open nonblock write {self.out_name}')
+
+    def open_write_block(self):
+        assert self.pipe_out is None, 'do not open twice'
+        myprint(f'start open block write {self.out_name}')
+        self.pipe_out = os.open(self.out_name, os.O_WRONLY)
+        myprint(f'done open block write {self.out_name}')
+
+    def close_write(self):
+        assert self.pipe_out, 'have you called open_write_*()?'
+        os.close(self.pipe_out)
+        self.pipe_out = None
 
     def try_read_allow_empty(self, max_buffer_size=99999):
         assert self.pipe_in, 'have you called open_read_nonblock()?'
@@ -155,18 +174,29 @@ class PipePair:
         return y
 
     def write(self, data):
-        myprint(f'start open write {self.out_name}')
-        f = os.open(self.out_name, os.O_WRONLY)
-        myprint(f'done open write {self.out_name}')
-        os.write(f, data)
-        os.close(f)
+        assert self.pipe_out, 'have you called open_write_nonblock()?'
+        os.write(self.pipe_out, data)
 
-    def write_nonblock(self, data):
-        myprint(f'start open nonblock write {self.out_name}')
-        f = os.open(self.out_name, os.O_WRONLY | os.O_NONBLOCK)
-        myprint(f'done open nonblock write {self.out_name}')
-        os.write(f, data)
-        os.close(f)
+    def write_int(self, i):
+        self.write(int(i).to_bytes(4, 'big'))
+
+    def read_int(self, allow_empty):
+        b = self.read_exact(buffer_size=4, allow_empty=allow_empty)
+        return int.from_bytes(b, 'big') if b else None
+
+    def write_bytes(self, b, length=None):
+        assert b is not None
+        length = length or len(b)
+        self.write_int(length)
+        self.write(b)
+
+    def read_bytes(self, allow_empty):
+        length = self.read_int(allow_empty)
+        if length:
+            return self.read_exact(length, allow_empty=False)
+        else:
+            return None
+
 
 def reverse_in_out(pairs):
     list = []

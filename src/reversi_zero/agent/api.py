@@ -54,7 +54,9 @@ class ReversiModelAPIServer:
             pp.open_read_nonblock()
 
         # report to parent I am ready
-        self.parent_pipe_pair.write_nonblock(bytes([1]))
+        self.parent_pipe_pair.open_write_nonblock()
+        self.parent_pipe_pair.write(bytes([1]))
+        self.parent_pipe_pair.close_write()
 
         input_len_per_batch = 1
         for x in self.config.model.input_size:
@@ -113,8 +115,10 @@ class ReversiModelAPIServer:
 
                 to_write = pool_y[:len(p)+len(v)].data
                 byte_length = len(to_write)*pool_y.dtype.itemsize
-                self.data_pipe_pairs[pi].write_nonblock(byte_length.to_bytes(4, 'big'))
-                self.data_pipe_pairs[pi].write_nonblock(to_write)
+                self.data_pipe_pairs[pi].open_write_nonblock()
+                self.data_pipe_pairs[pi].write(byte_length.to_bytes(4, 'big'))
+                self.data_pipe_pairs[pi].write(to_write)
+                self.data_pipe_pairs[pi].close_write()
 
                 np.copyto(pool_y[:len(p)+len(v)], pool_empty[:len(p)+len(v)])
 
@@ -136,8 +140,10 @@ class ReversiModelAPIProxy:
         x = np.asarray(x, dtype=BUFFER_DTYPE)
         x = x.ravel()
         byte_length = len(x)*x.dtype.itemsize
-        self.pipe_pair.write_nonblock(byte_length.to_bytes(4, 'big'))
-        self.pipe_pair.write_nonblock(x.data)
+        self.pipe_pair.open_write_nonblock()
+        self.pipe_pair.write(byte_length.to_bytes(4, 'big'))
+        self.pipe_pair.write(x.data)
+        self.pipe_pair.close_write()
 
         y = self.pipe_pair.read_exact(buffer_size=4, allow_empty=False, sleep_second=0.001)
         to_read_len = int.from_bytes(y, 'big')

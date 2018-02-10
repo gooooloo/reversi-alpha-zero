@@ -244,7 +244,10 @@ class GTPClient(object):
         self.pipe_pair = pipe_pair
 
     def send(self, data):
+        self.pipe_pair.open_write_block()
         self.pipe_pair.write(data.encode())
+        self.pipe_pair.close_write()
+
         self.pipe_pair.open_read_nonblock()
         while True:
             data = self.pipe_pair.try_read_allow_empty()

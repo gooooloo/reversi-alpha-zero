@@ -16,6 +16,7 @@ CMD_LIST = [
     'gtp_server_ntest',
     'http_server',
     'model_serving',
+    'model_cache',
     'opt',
     'play_gui',
     'res',
@@ -74,6 +75,7 @@ def create_parser():
     parser.add_argument("--save-versus-dir", help="", default=None)
     parser.add_argument("--p1-name", help="p1-name", default=None)
     parser.add_argument("--p2-name", help="p2-name", default=None)
+    parser.add_argument("--model-cache-size", help="", type=int, default=None)
     return parser
 
 
@@ -145,6 +147,9 @@ def setup(config: Config, args, setup_logger_flag):
     if args.n_sims is not None:
         config.play.simulation_num_per_move = args.n_sims
 
+    if args.model_cache_size is not None:
+        config.model_cache.model_cache_size = args.model_cache_size
+
 
 def start():
 
@@ -169,6 +174,8 @@ def start():
         from .worker import resignation as worker
     elif args.cmd == 'model_serving':
         from .worker import model_serving as worker
+    elif args.cmd == 'model_cache':
+        from .worker import model_cache as worker
     elif args.cmd == 'self_play_kernel':
         from .worker import self_play_kernel as worker
     elif args.cmd == 'versus_a_game_kernel':

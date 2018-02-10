@@ -37,6 +37,8 @@ class Config:
 
         self.time = env_specific.TimeConfig()
 
+        self.model_cache = env_specific.ModelCacheConfig()
+
 
 class Options:
     pipe_pairs = None

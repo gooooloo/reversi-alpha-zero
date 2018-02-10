@@ -39,7 +39,9 @@ class GTPServerWorker:
         while True:
             cmd = self.parent_pipe_pair.read_no_empty(sleep_retry=0.1)
             result = self.gtp_server.cmd(cmd.decode())
+            self.parent_pipe_pair.open_write_block()
             self.parent_pipe_pair.write(result.encode())
+            self.parent_pipe_pair.close_write()
 
     def get_game_obj(self):
         assert self.model_pipe_pair

@@ -105,7 +105,9 @@ class VersusWorkerBase:
                     sleep(1)
 
         if self.parent_pipe_pairs:
-            self.parent_pipe_pairs.write_nonblock(f'{self.win_n},{self.draw_n},{self.lose_n}'.encode())
+            self.parent_pipe_pairs.open_write_nonblock()
+            self.parent_pipe_pairs.write(f'{self.win_n},{self.draw_n},{self.lose_n}'.encode())
+            self.parent_pipe_pairs.close_write()
         else:
             logger.info(f"{self.win_n} wins, {self.draw_n} draws, {self.lose_n} loses")
 

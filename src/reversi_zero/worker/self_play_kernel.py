@@ -5,6 +5,7 @@ from time import time
 import numpy as np
 
 from src.reversi_zero.agent.api import ReversiModelAPIProxy
+from src.reversi_zero.agent.model_cache import ModelCacheClient
 from src.reversi_zero.agent.player import SelfPlayer
 from src.reversi_zero.config import Config
 from src.reversi_zero.lib.data_helper import remove_old_play_data, save_play_data
@@ -21,9 +22,15 @@ class SelfPlayWorker:
     def __init__(self, config: Config):
         self.config = config
         assert self.config.opts.pipe_pairs
-        assert len(self.config.opts.pipe_pairs) == 1
-        self.pipe_pair = self.config.opts.pipe_pairs[0]
-        self.api = ReversiModelAPIProxy(self.config, self.pipe_pair)
+        assert len(self.config.opts.pipe_pairs) in (1, 2)
+        self.api_pipe_pair = self.config.opts.pipe_pairs[0]
+        self.api = ReversiModelAPIProxy(self.config, self.api_pipe_pair)
+
+        if len(self.config.opts.pipe_pairs) > 1:
+            self.cache_pipe_pair = self.config.opts.pipe_pairs[1]
+            self.model_cache = ModelCacheClient(self.cache_pipe_pair)
+        else:
+            self.model_cache = None
 
     def start(self):
 
@@ -69,7 +76,7 @@ class SelfPlayWorker:
         def make_sim_env_fn():
             return env.copy()
 
-        player = SelfPlayer(make_sim_env_fn=make_sim_env_fn, config=self.config, api=self.api)
+        player = SelfPlayer(make_sim_env_fn=make_sim_env_fn, config=self.config, api=self.api, model_cache=self.model_cache)
         player.prepare(root_env=env)
 
         moves = []
