@@ -62,6 +62,7 @@ Why use 30 min? Actually I am targeting 5 min C++ implementation on a 8-core CPU
 
 - Starting from step 411400, I increase computing sources for self-play. As a result, the selfplay speed raises from about 500 games per hour to about 1150 games per hour (with 800 simlulations per move). Opt speed keeps not changed, 12 minutes training 100 steps.
 - Starting from step 406401, there is a bug of evaluator. I fix it at step 434700.
+- Starting from step 531100, I use model-cache.
 
 |           |         |  Ntest: 5 |  Ntest: 5 |  Ntest: 6 |  Ntest: 6 |  Ntest: 7 |  Ntest: 7 |
 |-----------|--------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|
@@ -182,6 +183,7 @@ Why use 30 min? Actually I am targeting 5 min C++ implementation on a 8-core CPU
 |step-485800|   30 min|           |W **1/0/1**|B **1/0/1**|W **1/1/0**|           |W **1/1/0**|
 |step-497000|  800 sim|  B 2/0/3  |W **0/5/0**|  B 1/0/4  |           |           |           |
 |step-513800|  800 sim|           |           |  B 1/0/4  |W **5/0/0**|  B 0/1/4  |           |
+|step-533800|  800 sim|           |           |           |           |           |           |
 
 
 |           |         |  Ntest:14 |  Ntest:14 |  Ntest:15 |  Ntest:15 |  Ntest:16 |  Ntest:16 |
@@ -196,8 +198,11 @@ Why use 30 min? Actually I am targeting 5 min C++ implementation on a 8-core CPU
 |step-453800|   30 min|           |           |           |           |           |           |
 |step-453800|  400 sim|           |           |           |           |           |           |
 |step-453800|  800 sim|           |           |           |           |           |           |
-|step-473800|   30 min|B **0/2/0**|           |     -     |     -     |     -     |     -     |
+|step-473800|   30 min|B **0/2/0**|           |  B 0/1/1  |           |           |W **0/2/0**|
 |step-473800|  800 sim|  B 0/1/4  |           |           |           |  B 0/2/3  |           |
 |step-485800|   30 min|           |  W 0/1/1  |           |           |B **1/0/1**|           |
+|step-513800|   30 min|           |           |           |  W 0/1/1  |           |W **1/0/1**|
 |step-513800|  800 sim|           |           |           |           |           |           |
 |step-513800|   90 min|     -     |     -     |           |  W 0/1/1  |     -     |     -     |
+|step-533800|  800 sim|  B 0/2/3  |W **0/5/0**|           |           |           |W **5/0/0**|
+

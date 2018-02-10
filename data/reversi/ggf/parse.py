@@ -114,9 +114,9 @@ if __name__ == '__main__':
                             s += '           |'
                         elif e.win >= e.lose:
                             if e.win > 9:
-                                s += f'              **{"B" if side else "W"} {e.win}/{e.draw}/{e.lose}**|'[-13:]
+                                s += f'              {"B" if side else "W"} **{e.win}/{e.draw}/{e.lose}**|'[-13:]
                             else:
-                                s += f'              **{"B" if side else "W"} {e.win}/{e.draw}/{e.lose}**|'[-12:]
+                                s += f'              {"B" if side else "W"} **{e.win}/{e.draw}/{e.lose}**|'[-12:]
                         else:
                             s += f'                    {"B" if side else "W"} {e.win}/{e.draw}/{e.lose}  |'[-12:]
                 s += '\n'
