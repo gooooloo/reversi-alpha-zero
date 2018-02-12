@@ -93,6 +93,7 @@ class ResourceConfig:
 
         self.play_data_dir = os.path.join(self.data_dir, "play_data")
         self.play_data_filename_tmpl = "play_%s.json"
+        self.play_data_statistics_filename = "play_data_statistics.log"
 
         self.log_dir = os.path.join(self.project_dir, "logs")
         self.main_log_path = os.path.join(self.log_dir, "main.log")

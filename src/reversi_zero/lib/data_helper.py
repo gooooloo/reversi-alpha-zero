@@ -15,6 +15,10 @@ def get_game_data_filenames(rc: ResourceConfig):
     return files
 
 
+def get_game_data_statistics_filename(rc: ResourceConfig):
+    return os.path.join(rc.play_data_dir, rc.play_data_statistics_filename)
+
+
 def get_generation_model_dirs(rc: ResourceConfig):
     dir_pattern = os.path.join(rc.generation_model_dir, rc.generation_model_dirname_tmpl % "*")
     dirs = list(sorted(glob(dir_pattern)))
@@ -49,3 +53,24 @@ def remove_old_play_data(config):
         except FileNotFoundError:
             # Fine. Maybe due to multiple processes parallelsim.
             logger.debug(f'fail to remove file {files[i]}')
+
+
+KEY_UNLOADED_DATA_COUNT = 'unloaded_data_count'
+
+
+def save_unloaded_data_count(rc: ResourceConfig, count):
+    fn = get_game_data_statistics_filename(rc)
+    write_game_data_to_file(fn, {KEY_UNLOADED_DATA_COUNT: count})
+
+
+def load_unloaded_data_count(rc: ResourceConfig):
+    fn = get_game_data_statistics_filename(rc)
+    try:
+        d = read_game_data_from_file(fn)
+        if d and KEY_UNLOADED_DATA_COUNT in d:
+            return int(d[KEY_UNLOADED_DATA_COUNT])
+        else:
+            return 0
+    except Exception as e:
+        logger.info(e)
+        return 0

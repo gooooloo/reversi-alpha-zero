@@ -8,10 +8,12 @@ from time import sleep
 import keras.backend as K
 import numpy as np
 from keras.optimizers import SGD
+
 from src.reversi_zero.agent.model import ReversiModel, objective_function_for_policy, objective_function_for_value
 from src.reversi_zero.config import Config
 from src.reversi_zero.lib import tf_util
-from src.reversi_zero.lib.data_helper import get_game_data_filenames, read_game_data_from_file
+from src.reversi_zero.lib.data_helper import get_game_data_filenames, read_game_data_from_file, \
+    save_unloaded_data_count, load_unloaded_data_count
 from src.reversi_zero.lib.model_helpler import load_model_weight, save_model_weight
 
 logger = getLogger(__name__)
@@ -55,6 +57,7 @@ class OptimizeWorker:
         self.loaded_data = {}
         self.dataset = None
         self.optimizer = None
+        self.unloaded_data_count = 0
 
     def start(self):
         self.model, self.total_steps = self.load_model()
@@ -62,6 +65,8 @@ class OptimizeWorker:
         # overwrite if caller requires to
         if self.config.trainer.start_total_steps > 0:
             self.total_steps = self.config.trainer.start_total_steps
+
+        self.unloaded_data_count = load_unloaded_data_count(self.config.resource)
 
         self.training()
 
@@ -202,6 +207,8 @@ class OptimizeWorker:
             logger.debug("updating training dataset")
             self.dataset = DataSet(self.loaded_data)
 
+        logger.info(f'loaded data size: {self.dataset_size}; unloaded data size: {self.unloaded_data_count}')
+
     def load_data_from_file(self, filename):
         try:
             logger.debug(f"loading data from {filename}")
@@ -215,4 +222,6 @@ class OptimizeWorker:
         logger.debug(f"removing data about {filename} from training set")
         self.loaded_filenames.remove(filename)
         if filename in self.loaded_data:
+            self.unloaded_data_count += len(self.loaded_data[filename])
+            save_unloaded_data_count(self.config.resource, self.unloaded_data_count)
             del self.loaded_data[filename]

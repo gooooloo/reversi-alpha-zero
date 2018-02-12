@@ -1,9 +1,21 @@
 Strength Records
 ==========
 
-Below records are using the AlphaGoZero way,  which has a 'Evaluator' module. Not AlphaZero way.
+Challenge 1 
+---------
 
-Records 1
+Challenge 1 is using the AlphaGoZero way,  which has a 'Evaluator' module. Not AlphaZero way.
+
+It ends at step 545800. When it ends, the last git commit is 37392e3207d7c36ffdb502a543bb24847825e928.
+It starts at 2017-12-23, ends at 2018-02-11, so it takes about 50 days.
+I didn't record how many self-play data it generates.
+
+Finally I would say its strength is near a position of NTest depth 10+.
+
+Evaluator is getting half games ends up with draw. I feel there is no more obvious progress. So I end it up.
+
+
+Challenge 1 - Records 1
 ---------
 
 Rule: Play with this [iOS APP](https://itunes.apple.com/cn/app/id574915961). For each model, we plays 2 games, 1 as black, 1 as white. If wins at least once, no matter as black or white, we count it as a 'won'.
@@ -32,7 +44,7 @@ Starting from about step 100000, I change simulations_per_move in selfplay from 
 
 (then I lose my record in game. Have to restart ...)
 
-Records 2
+Challenge 1 - Records 2
 ---------
 
 Rule: Play with this [iOS APP](https://itunes.apple.com/ca/app/id574915961). For each model, we plays 2 games, 1 as black, 1 as white. If wins at least once, no matter as black or white, we count it as a 'won'.
@@ -50,7 +62,7 @@ Model step-350400 can be downloaded from [here](https://github.com/gooooloo/reve
 - step-350400 (400sim): lose to level 99
 - step-350400 (800sim): won level 99
 
-Records 3
+Challenge 1 - Records 3
 ---------
 
 Rule: play with NTest. `NTest:xxx` means NTest with strenth xxx. `x/y/z` means x wins, y draws, z loses.
@@ -223,3 +235,9 @@ Why use 30 min? Actually I am targeting 5 min C++ implementation on a 8-core CPU
 |-----------|--------:|:---------:|:---------:|
 |step-533800|   30 min|           |           |
 |step-534600|   30 min|           |  W 0/1/1  |
+
+
+Challenge 2
+---------
+
+Using the AlphaZero way -- no Evaluator.

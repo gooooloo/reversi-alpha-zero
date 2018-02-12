@@ -46,8 +46,8 @@ class TrainerConfig:
         self.epoch_steps = 100              # AZ: 1?                                            MOKE: 200~9000
         # AZ paper says "maintains a single NN that is update continually". That means save_model_steps = 1?
         # However in practice, we want to balance something...
-        self.save_model_steps = 800         # AZ: 1?                                            MOKE: 200~9000
-        self.generation_model_steps = 800   # AZ: N/A.                                          MOKE: N/A
+        self.save_model_steps = 100         # AZ: 1?                                            MOKE: 200~9000
+        self.generation_model_steps = 6400   # AZ: N/A.                                          MOKE: N/A
         self.min_data_size_to_learn = 12500 # AZ: N/A                                           MOKE: same
         self.lr_schedule = (  # (learning rate, before step count) # AZ: schedule UNKNOWN       MOKE: (0.01,100k),(0.001,200k),(0.0001,~)
             (0.2,    1500),

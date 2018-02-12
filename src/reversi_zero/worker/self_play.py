@@ -1,9 +1,11 @@
 from logging import getLogger
 from time import sleep
 
+from src.reversi_zero.agent.api import MODEL_SERVING_READY, MODEL_RELOAD_BEGIN, MODEL_RELOAD_END
+from src.reversi_zero.agent.model_cache import MODEL_CACHE_READY, RESET_CACHE_START, RESET_CACHE_END
 from src.reversi_zero.config import Config
 from src.reversi_zero.lib.model_helpler import fetch_model_weight_digest
-from src.reversi_zero.lib.pipe_helper import PipeFilesManager
+from src.reversi_zero.lib.pipe_helper import PipeFilesManager, reverse_in_out
 from src.reversi_zero.lib.proc_helper import build_child_cmd, start_child_proc
 
 logger = getLogger(__name__)
@@ -44,55 +46,64 @@ class SelfWorker:
 
     def start(self):
 
-        digest = None
-        ps = None
+        pipe_pairs = self.pipe_files.make_pipes(2*self.config.opts.n_workers + 2)
+        model_serving_pps = pipe_pairs[:self.config.opts.n_workers+1]
+        model_cache_pps = pipe_pairs[self.config.opts.n_workers+1:] if self.config.model_cache.model_cache_size else None
+
+        self.start_model_serving_process(reverse_in_out(model_serving_pps))
+
+        serving_and_me_pp = model_serving_pps[0]
+        serving_and_me_pp.open_read_nonblock()  # won't close
+        x = serving_and_me_pp.read_int(allow_empty=False)
+        assert x == MODEL_SERVING_READY
+        model_serving_pps = model_serving_pps[1:]
+
+        if model_cache_pps:
+            self.start_model_cache_process(reverse_in_out(model_cache_pps))
+
+            cache_and_me_pp = model_cache_pps[0]
+            cache_and_me_pp.open_read_nonblock()  # won't close
+            x = cache_and_me_pp.read_int(allow_empty=False)
+            assert x == MODEL_CACHE_READY
+            model_cache_pps = model_cache_pps[1:]
+
+        if model_cache_pps:
+            for pp0, pp1 in zip(model_serving_pps, model_cache_pps):
+                self.start_a_self_play_process([pp0, pp1])
+        else:
+            for pp0 in model_serving_pps:
+                self.start_a_self_play_process([pp0])
+
+        digest = fetch_model_weight_digest(self.config)
+        assert digest
+
         while True:
-            if digest is None:
-                ps = []
+            now_digest = fetch_model_weight_digest(self.config)
+            logger.info(f'old digets: {digest}')
+            logger.info(f'now digets: {now_digest}')
+            if now_digest == digest:
+                sleep(600)
+                continue
+            else:
+                logger.info('reset cache start')
 
-                pipe_pairs = self.pipe_files.make_pipes(2*self.config.opts.n_workers + 2)
-                model_serving_pps = pipe_pairs[:self.config.opts.n_workers+1]
-                model_cache_pps = pipe_pairs[self.config.opts.n_workers+1:] if self.config.model_cache.model_cache_size else None
+                cache_and_me_pp.open_write_nonblock()
+                cache_and_me_pp.write_int(RESET_CACHE_START)
+                cache_and_me_pp.close_write()
 
-                p = self.start_model_serving_process(model_serving_pps)
-                ps.append(p)
+                serving_and_me_pp.open_write_nonblock()
+                serving_and_me_pp.write_int(MODEL_RELOAD_BEGIN)
+                serving_and_me_pp.close_write()
 
-                model_serving_pps[0].reverse_in_out().read_once(99)  # having response means 'ready', whatever it is.
-                model_serving_pps = model_serving_pps[1:]
+                x = serving_and_me_pp.read_int(allow_empty=False)
+                assert x == MODEL_RELOAD_END
 
-                if model_cache_pps:
-                    p = self.start_model_cache_process(model_cache_pps)
-                    ps.append(p)
+                cache_and_me_pp.open_write_nonblock()
+                cache_and_me_pp.write_int(RESET_CACHE_END)
+                cache_and_me_pp.close_write()
 
-                    model_cache_pps[0].reverse_in_out().read_once(99)  # having response means 'ready', whatever it is.
-                    model_cache_pps = model_cache_pps[1:]
-
-                if model_cache_pps:
-                    for pp0, pp1 in zip(model_serving_pps, model_cache_pps):
-                        pp0 = pp0.reverse_in_out()
-                        pp1 = pp1.reverse_in_out()
-                        p = self.start_a_self_play_process([pp0, pp1])
-                        ps.append(p)
-                else:
-                    for pp0 in model_serving_pps:
-                        pp0 = pp0.reverse_in_out()
-                        p = self.start_a_self_play_process([pp0])
-                        ps.append(p)
+                logger.info('reset cache finish')
 
                 digest = fetch_model_weight_digest(self.config)
                 assert digest
-
-            else:
-                now_digest = fetch_model_weight_digest(self.config)
-                print(f'old digets: {digest}')
-                print(f'now digets: {now_digest}')
-                if now_digest == digest:
-                    sleep(600)
-                    continue
-                else:
-                    for p in reversed(ps):
-                        p.kill()
-                    ps = None
-                    self.pipe_files.clear_pipes()
-                    digest = None
 

@@ -7,6 +7,10 @@ from src.reversi_zero.lib.pipe_helper import PipePair
 
 logger = getLogger(__name__)
 
+MODEL_CACHE_READY = 1
+RESET_CACHE_START = 2
+RESET_CACHE_END = 3
+
 
 class ModelCachePipeHelper:
     def __init__(self):
@@ -59,20 +63,40 @@ class ModelCachePipeHelper:
 
 
 class ModelCacheServer:
-    def __init__(self, pipe_pairs, model_cache_max_length):
+    def __init__(self, parent_pipe_pair, data_pipe_pairs, model_cache_max_length):
         self.model_cache = dict()
-        self.pipe_pairs = pipe_pairs
+
+        self.parent_pipe_pair = parent_pipe_pair
+        self.pipe_pairs = data_pipe_pairs
 
         self.cache_helper = ModelCachePipeHelper()
         self.model_cache_max_length = model_cache_max_length
 
-    def get_ready(self):
+        self.allow_suggest = True
+
+    def serve(self):
+
+        self.parent_pipe_pair.open_read_nonblock()
         for pp in self.pipe_pairs:
             pp.open_read_nonblock()
 
-    def serve(self):
+        # report to parent I am ready
+        self.parent_pipe_pair.open_write_nonblock()
+        self.parent_pipe_pair.write_int(MODEL_CACHE_READY)
+        self.parent_pipe_pair.close_write()
+
         push_count = 0
         while True:
+
+            x = self.parent_pipe_pair.read_int(allow_empty=True)
+            if x == RESET_CACHE_START:
+                self.model_cache.clear()
+                self.allow_suggest = False
+            elif x == RESET_CACHE_END:
+                self.allow_suggest = True
+            else:
+                pass
+
             for pp in self.pipe_pairs:
                 t = self.cache_helper.read_type(pp)
 
@@ -93,8 +117,11 @@ class ModelCacheServer:
                     if push_count % 100000 == 0:
                         logger.info(f'model cache size: {len(self.model_cache)}')
 
-                    if len(self.model_cache) < self.model_cache_max_length:
+                    if self.allow_suggest:
                         self.model_cache[ob] = p,v
+
+                    if len(self.model_cache) >= self.model_cache_max_length:
+                        self.allow_suggest = False
 
                 else:
                     pass

@@ -4,6 +4,10 @@ from src.reversi_zero.lib.pipe_helper import PipePair
 
 BUFFER_DTYPE = np.float32
 
+MODEL_SERVING_READY = 1
+MODEL_RELOAD_BEGIN = 2
+MODEL_RELOAD_END = 3
+
 
 class ReversiModelAPISimple:
     def __init__(self, config: Config, agent_model):
@@ -53,9 +57,11 @@ class ReversiModelAPIServer:
         for pp in self.data_pipe_pairs:
             pp.open_read_nonblock()
 
+        self.parent_pipe_pair.open_read_nonblock()
+
         # report to parent I am ready
         self.parent_pipe_pair.open_write_nonblock()
-        self.parent_pipe_pair.write(bytes([1]))
+        self.parent_pipe_pair.write_int(MODEL_SERVING_READY)
         self.parent_pipe_pair.close_write()
 
         input_len_per_batch = 1
@@ -71,6 +77,15 @@ class ReversiModelAPIServer:
         pool_y = np.empty((max_batches * output_len_per_batch), dtype=BUFFER_DTYPE)
 
         while True:
+            x = self.parent_pipe_pair.read_int(allow_empty=True)
+            if x:
+                assert x == MODEL_RELOAD_BEGIN
+                self._load_model()
+
+                self.parent_pipe_pair.open_write_nonblock()
+                self.parent_pipe_pair.write_int(MODEL_RELOAD_END)
+                self.parent_pipe_pair.close_write()
+
             batch_begin = 0
             batch_slices = []
             flattern_begin = 0

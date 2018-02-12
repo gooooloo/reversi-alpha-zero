@@ -13,15 +13,11 @@ def start(config: Config):
 class ModelCacheWorker:
     def __init__(self, config: Config):
         self.config = config
-
         assert len(self.config.opts.pipe_pairs) > 1
         self.parent_pipe_pair = self.config.opts.pipe_pairs[0]
-        self.cache_server = ModelCacheServer(self.config.opts.pipe_pairs[1:], self.config.model_cache.model_cache_size)
+        self.data_pipe_pair = self.config.opts.pipe_pairs[1:]
 
     def start(self):
-        self.cache_server.get_ready()
-        self.parent_pipe_pair.open_write_nonblock()
-        self.parent_pipe_pair.write_int(1)  # means: I am ready
-        self.parent_pipe_pair.close_write()
-        self.cache_server.serve()
+        cache_server = ModelCacheServer(self.parent_pipe_pair, self.data_pipe_pair, self.config.model_cache.model_cache_size)
+        cache_server.serve()
 
