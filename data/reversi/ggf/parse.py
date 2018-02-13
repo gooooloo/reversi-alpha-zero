@@ -77,15 +77,14 @@ if __name__ == '__main__':
             d[arz_gen][arz_sim_min][ntest_lv][arz_black].lose += 1
 
     gen_set = set(x for x in d)
-    #gen_set = [x for x in gen_set if x == 513800]
+    gen_set = [x for x in gen_set if x == 6400]
     sim_min_set = set(y for x in d for y in d[x] )
     ntest_lv_set = set(z for x in d for y in d[x] for z in d[x][y])
-    ntest_lv_set1 = [x for x in ntest_lv_set if  5 <= x < 8]
-    ntest_lv_set2= [x for x in ntest_lv_set if 8 <= x < 11]
-    ntest_lv_set3= [x for x in ntest_lv_set if 11 <= x < 14]
-    ntest_lv_set4= [x for x in ntest_lv_set if 14 <= x]
+    ntest_lv_set1 = [x for x in ntest_lv_set if  1 <= x < 4]
 
-    for ntest_lv_set in (ntest_lv_set1, ntest_lv_set2, ntest_lv_set3, ntest_lv_set4):
+    for ntest_lv_set in (
+            ntest_lv_set1,
+    ):
         s = ''
         s += '|           |         |'
         for ntest_lv in sorted(list(ntest_lv_set)):

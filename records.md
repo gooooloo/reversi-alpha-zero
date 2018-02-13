@@ -200,6 +200,7 @@ Why use 30 min? Actually I am targeting 5 min C++ implementation on a 8-core CPU
 |step-534600|   30 min|B **1/0/1**|  W 0/1/1  |           |W **2/0/0**|           |W **1/1/0**|
 |step-534600|  800 sim|           |  W 1/0/4  |           |           |           |           |
 |step-541800|  800 sim|           |W **5/0/0**|           |           |           |           |
+|step-545800|  800 sim|B **4/0/1**|  W 0/4/1  |           |           |           |           |
 
 |           |         |  Ntest:14 |  Ntest:14 |  Ntest:15 |  Ntest:15 |  Ntest:16 |  Ntest:16 |
 |-----------|--------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|
@@ -241,3 +242,24 @@ Challenge 2
 ---------
 
 Using the AlphaZero way -- no Evaluator.
+
+
+Challenge 2 - Opt/Self-Play Speed Ratio
+---------
+
+Some data collected at the moment of training step 9400:
+
+- Train: 9400 * 3072 = 28,876,800 moves
+- Self-Play: 1928907 * 8 = 15,431,256 moves (after symmetric augmented)
+- So every move is trained 28,876,800 / 15,431,256 = 1.87 times.
+- Time since start: ~20 hours, so ~1,440,000 training steps per hour, ~770,000 self play moves per hour (after symmetric augmented).
+
+
+Challenge 2 - AI Strength Record
+---------
+
+|           |         |  Ntest: 1 |  Ntest: 1 |  Ntest: 2 |  Ntest: 2 |  Ntest: 3 |  Ntest: 3 |
+|-----------|--------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|
+|step-     0|  800 sim|  B 1/0/4  |           |           |           |           |           |
+|step-  6400|  800 sim|           |W **5/0/0**|           |           |           |           |
+

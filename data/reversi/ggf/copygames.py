@@ -66,7 +66,7 @@ if __name__ == '__main__':
         if arz_score < ntest_score:
             continue
 
-        dest_folder = os.path.join(os.path.dirname(fn), '../../../../reversi-alpha-zero-models/ggf', f'step-{arz_gen}')
+        dest_folder = os.path.join(os.path.dirname(fn), '../../../../reversi-alpha-zero-models/challenge-2/ggf', f'step-{arz_gen}')
         if arz_sim:
             dest_folder = os.path.join(dest_folder, f'sim-{arz_sim}')
         else:
