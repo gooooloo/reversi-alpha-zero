@@ -18,7 +18,7 @@ if __name__ == '__main__':
     arz_gen_set  = set()
     arz_sim_set  = set()
 
-    for fn in glob.glob('**/*', recursive=True):
+    for fn in glob.glob('data/**/*', recursive=True):
         p = re.compile('.*reversi-NTest_(\d*)-ARZ_(\d*)_(\d*)-(\d*)_(\d*).*ggf$')
         m = p.match(fn)
         ntest_lv = None

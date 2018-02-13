@@ -241,7 +241,8 @@ Why use 30 min? Actually I am targeting 5 min C++ implementation on a 8-core CPU
 Challenge 2
 ---------
 
-Using the AlphaZero way -- no Evaluator.
+Using the AlphaZero way -- no Evaluator. The corresponding codes are [commit 60e109d](https://github.com/gooooloo/reversi-alpha-zero/commit/60e109d30cadf0318a1837e7a5b865d707b69b7b).
+
 
 
 Challenge 2 - Opt/Self-Play Speed Ratio
