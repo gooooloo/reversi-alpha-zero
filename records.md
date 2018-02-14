@@ -265,4 +265,5 @@ Challenge 2 - AI Strength Record
 |step-  6400|  800 sim|           |W **5/0/0**|           |           |           |           |
 |step- 12800|  800 sim|           |           |           |           |           |           |
 |step- 19200|  800 sim|           |           |           |           |           |           |
+|step- 25600|  800 sim|B **4/0/1**|           |           |           |  B 1/0/4  |           |
 
