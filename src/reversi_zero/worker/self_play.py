@@ -66,6 +66,8 @@ class SelfWorker:
             x = cache_and_me_pp.read_int(allow_empty=False)
             assert x == MODEL_CACHE_READY
             model_cache_pps = model_cache_pps[1:]
+        else:
+            cache_and_me_pp = None
 
         if model_cache_pps:
             for pp0, pp1 in zip(model_serving_pps, model_cache_pps):
@@ -87,9 +89,10 @@ class SelfWorker:
             else:
                 logger.info('reset cache start')
 
-                cache_and_me_pp.open_write_nonblock()
-                cache_and_me_pp.write_int(RESET_CACHE_START)
-                cache_and_me_pp.close_write()
+                if cache_and_me_pp:
+                    cache_and_me_pp.open_write_nonblock()
+                    cache_and_me_pp.write_int(RESET_CACHE_START)
+                    cache_and_me_pp.close_write()
 
                 serving_and_me_pp.open_write_nonblock()
                 serving_and_me_pp.write_int(MODEL_RELOAD_BEGIN)
@@ -98,9 +101,10 @@ class SelfWorker:
                 x = serving_and_me_pp.read_int(allow_empty=False)
                 assert x == MODEL_RELOAD_END
 
-                cache_and_me_pp.open_write_nonblock()
-                cache_and_me_pp.write_int(RESET_CACHE_END)
-                cache_and_me_pp.close_write()
+                if cache_and_me_pp:
+                    cache_and_me_pp.open_write_nonblock()
+                    cache_and_me_pp.write_int(RESET_CACHE_END)
+                    cache_and_me_pp.close_write()
 
                 logger.info('reset cache finish')
 
