@@ -1,7 +1,7 @@
 import importlib
 import os
 from bisect import bisect
-from logging import getLogger
+from logging import getLogger, INFO
 from random import randint
 from time import sleep
 
