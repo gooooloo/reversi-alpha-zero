@@ -4,7 +4,7 @@ About
 Reversi reinforcement learning of [AlphaGo zero](https://deepmind.com/blog/alphago-zero-learning-scratch/) and [Alpha Zero](https://arxiv.org/abs/1712.01815) methods.
 
 - This version of [code](https://github.com/gooooloo/reversi-alpha-zero/tree/0.1) is verified capable to solve 4x4 Reversi Problem using **AlphaGoZero** way.
-- This version of [code](https://github.com/gooooloo/reversi-alpha-zero/tree/0.2) is verified capable to train a rather strong 8x8 Reversi using **AlphaGoZero** way. Trained AI's strenth is recorded in `records.md`, see `challenge 1` section.
+- This version of [code](https://github.com/gooooloo/reversi-alpha-zero/tree/0.2) is verified capable to train a rather strong 8x8 Reversi using **AlphaGoZero** way. Trained AI's strenth is recorded in [records.md, challenge 1 section](https://github.com/gooooloo/reversi-alpha-zero/blob/master/records.md#challenge-1).
 - I am now training a 8x8 Reversi AI using **AlphaZero** way.
 
 
@@ -144,7 +144,7 @@ python3.6 -m src.reversi_zero.run league --env reversi --n-workers 4
 Strength Records
 ==========
 
-see [records.sh](https://github.com/gooooloo/reversi-alpha-zero/blob/master/records.md) in this folder.
+see [records.md](https://github.com/gooooloo/reversi-alpha-zero/blob/master/records.md) in this folder.
 
 Credit
 ==========
