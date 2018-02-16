@@ -17,6 +17,7 @@ from src.reversi_zero.lib.data_helper import get_game_data_filenames, read_game_
 from src.reversi_zero.lib.model_helpler import load_model_weight, save_model_weight
 
 logger = getLogger(__name__)
+logger.setLevel(INFO)
 
 
 def start(config: Config):
@@ -153,7 +154,7 @@ class OptimizeWorker:
                 lr = this_lr
                 break
         K.set_value(self.optimizer.lr, lr)
-        logger.debug(f"total step={self.total_steps}, set learning rate to {lr}")
+        logger.info(f"total step={self.total_steps}, set learning rate to {lr}")
 
     def save_current_model(self):
         save_model_weight(self.model, self.total_steps)
@@ -184,7 +185,7 @@ class OptimizeWorker:
         from reversi_zero.agent.model import ReversiModel
         model = ReversiModel(self.config)
 
-        logger.debug(f"loading model")
+        logger.info(f"loading model")
         steps = load_model_weight(model)
         if steps is None:
             raise RuntimeError(f"Model can not loaded!")
@@ -204,7 +205,7 @@ class OptimizeWorker:
             updated = True
 
         if updated:
-            logger.debug("updating training dataset")
+            logger.info("updating training dataset")
             self.dataset = DataSet(self.loaded_data)
 
         logger.info(f'loaded data size: {self.dataset_size}; unloaded data size: {self.unloaded_data_count}')

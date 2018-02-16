@@ -84,7 +84,7 @@ class SelfWorker:
             logger.info(f'old digets: {digest}')
             logger.info(f'now digets: {now_digest}')
             if now_digest == digest:
-                sleep(600)
+                sleep(self.config.play.model_check_interval_seconds)
                 continue
             else:
                 logger.info('reset cache start')

@@ -36,18 +36,18 @@ class PlayConfig:
         self.v_resign_false_positive_fraction_t_min = 0.04  # AZ: UNKNOWN, MOKE: N/A
         self.n_games_to_self_play = 999999999
         self.render = False
+        self.model_check_interval_seconds = 60  # if too small, model reloading will waste to much self play time.
 
 
 class TrainerConfig:
     def __init__(self):
-        self.batch_size = 3072             # AZ: 4096 - I don't have so much GPU memory though, MOKE: 512
+        self.batch_size = 3072              # AZ: 4096 - I don't have so much GPU memory though, MOKE: 512
         self.epoch_to_checkpoint = 1
         self.start_total_steps = 0
-        self.epoch_steps = 100              # AZ: 1?                                            MOKE: 200~9000
-        # AZ paper says "maintains a single NN that is update continually". That means save_model_steps = 1?
-        # However in practice, we want to balance something...
-        self.save_model_steps = 100         # AZ: 1?                                            MOKE: 200~9000
-        self.generation_model_steps = 6400   # AZ: N/A.                                          MOKE: N/A
+        self.epoch_steps = 10               # AZ: 1?                                            MOKE: 200~9000
+        # if saving too frequently, model saving time(12 seconds per saving)  will slow down opt speed
+        self.save_model_steps = 10          # AZ: 1?                                            MOKE: 200~9000
+        self.generation_model_steps = 6400  # AZ: N/A.                                          MOKE: N/A
         self.min_data_size_to_learn = 12500 # AZ: N/A                                           MOKE: same
         self.lr_schedule = (  # (learning rate, before step count) # AZ: schedule UNKNOWN       MOKE: (0.01,100k),(0.001,200k),(0.0001,~)
             (0.2,    1500),
