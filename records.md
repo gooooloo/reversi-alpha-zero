@@ -243,6 +243,7 @@ Challenge 2
 
 Using the AlphaZero way -- no Evaluator. The corresponding codes are [commit 60e109d](https://github.com/gooooloo/reversi-alpha-zero/commit/60e109d30cadf0318a1837e7a5b865d707b69b7b).
 
+From step 45400, change model update/reloading frequentcy. [commit a960406](https://github.com/gooooloo/reversi-alpha-zero/commit/a9604062f0f53a42492a96453378aa6e0e8f4d81)
 
 
 Challenge 2 - Opt/Self-Play Speed Ratio
@@ -254,6 +255,7 @@ Some data collected at the moment of training step 9400:
 - Self-Play: 1928907 * 8 = 15,431,256 moves (after symmetric augmented)
 - So every move is trained 28,876,800 / 15,431,256 = 1.87 times.
 - Time since start: ~20 hours, so ~1,440,000 training steps per hour, ~770,000 self play moves per hour (after symmetric augmented).
+
 
 
 Challenge 2 - AI Strength Record
