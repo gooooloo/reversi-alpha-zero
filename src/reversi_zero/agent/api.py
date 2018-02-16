@@ -5,8 +5,10 @@ from src.reversi_zero.lib.pipe_helper import PipePair
 BUFFER_DTYPE = np.float32
 
 MODEL_SERVING_READY = 1
-MODEL_RELOAD_BEGIN = 2
-MODEL_RELOAD_END = 3
+MODEL_SERVING_START = 2
+MODEL_SERVING_STARTED = 3
+MODEL_SERVING_STOP = 4
+MODEL_SERVING_STOPPED = 5
 
 
 class ReversiModelAPISimple:
@@ -43,7 +45,15 @@ class ReversiModelAPIServer:
         from src.reversi_zero.agent.model import ReversiModel
         from src.reversi_zero.lib.model_helpler import load_model_weight, save_model_weight
         self.agent_model = ReversiModel(self.config)
-        if load_model_weight(self.agent_model) is None:
+        steps = load_model_weight(self.agent_model)
+
+        target_steps = self.config.opts.model_serving_step_check
+        while target_steps is not None and steps != target_steps:
+            print(f'model loading, exp step {target_steps}, act step {steps}')
+            self.agent_model = ReversiModel(self.config)
+            steps = load_model_weight(self.agent_model)
+
+        if steps is None:
             self.agent_model.build()
             save_model_weight(self.agent_model, 0)
 
@@ -57,11 +67,16 @@ class ReversiModelAPIServer:
         for pp in self.data_pipe_pairs:
             pp.open_read_nonblock()
 
-        self.parent_pipe_pair.open_read_nonblock()
-
-        # report to parent I am ready
         self.parent_pipe_pair.open_write_nonblock()
         self.parent_pipe_pair.write_int(MODEL_SERVING_READY)
+        self.parent_pipe_pair.close_write()
+
+        self.parent_pipe_pair.open_read_nonblock()
+        x = self.parent_pipe_pair.read_int(allow_empty=False, sleep_second=0.001)
+        assert x == MODEL_SERVING_START
+
+        self.parent_pipe_pair.open_write_nonblock()
+        self.parent_pipe_pair.write_int(MODEL_SERVING_STARTED)
         self.parent_pipe_pair.close_write()
 
         input_len_per_batch = 1
@@ -79,12 +94,12 @@ class ReversiModelAPIServer:
         while True:
             x = self.parent_pipe_pair.read_int(allow_empty=True)
             if x:
-                assert x == MODEL_RELOAD_BEGIN
-                self._load_model()
-
+                assert x == MODEL_SERVING_STOP
+                self.parent_pipe_pair.close_read()
                 self.parent_pipe_pair.open_write_nonblock()
-                self.parent_pipe_pair.write_int(MODEL_RELOAD_END)
+                self.parent_pipe_pair.write_int(MODEL_SERVING_STOPPED)
                 self.parent_pipe_pair.close_write()
+                break
 
             batch_begin = 0
             batch_slices = []

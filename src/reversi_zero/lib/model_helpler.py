@@ -1,11 +1,13 @@
 import operator
-from logging import getLogger
+from logging import getLogger, WARNING, INFO
 import requests
 import tempfile
 import os
 import time
 
 logger = getLogger(__name__)
+logger.setLevel(INFO)
+getLogger('requests.packages.urllib3.connectionpool').setLevel(WARNING)
 
 
 def load_model_weight(model):
@@ -16,7 +18,7 @@ def load_model_weight(model):
             return load_model_weight_internal(model)
         except Exception as e:
             logger.debug(e)
-            logger.debug("will retry")
+            logger.info("will retry")
             # for whatever reason(e.g., network error, fds file synchronization error), we sleep and retry.
             time.sleep(0.1)
             retry_count += 1
@@ -67,7 +69,7 @@ def save_model_weight(model, steps):
     return model.save(model.config.resource.model_config_path, model.config.resource.model_weight_path, steps)
 
 
-def fetch_model_weight_digest(config):
+def fetch_model_step_info(config):
     """
 
     :param reversi_zero.agent.model.ReversiModel model:
@@ -77,15 +79,15 @@ def fetch_model_weight_digest(config):
     cr = config.resource
     if cr.use_remote_model:
         config_file = tempfile.NamedTemporaryFile(delete=False)
-        response = requests.get(cr.remote_model_weight_path)
+        response = requests.get(cr.remote_model_config_path)
         config_file.write(response.content)
         config_file.close()
 
-        digest = ReversiModel.fetch_digest(config_file.name)
+        digest = ReversiModel.load_step_info(config_file.name)
 
         os.unlink(config_file.name)
     else:
-        digest = ReversiModel.fetch_digest(cr.model_weight_path)
+        digest = ReversiModel.load_step_info(cr.model_config_path)
 
     return digest
 

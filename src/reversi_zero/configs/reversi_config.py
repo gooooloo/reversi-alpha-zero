@@ -36,7 +36,7 @@ class PlayConfig:
         self.v_resign_false_positive_fraction_t_min = 0.04  # AZ: UNKNOWN, MOKE: N/A
         self.n_games_to_self_play = 999999999
         self.render = False
-        self.model_check_interval_seconds = 60  # if too small, model reloading will waste to much self play time.
+        self.model_check_interval_seconds = 10
 
 
 class TrainerConfig:

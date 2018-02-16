@@ -1,6 +1,6 @@
 from glob import glob
 from datetime import datetime
-from logging import getLogger
+from logging import getLogger, WARNING
 from time import sleep
 import tempfile
 import requests
@@ -8,6 +8,7 @@ import os
 import json
 
 logger = getLogger(__name__)
+getLogger('requests.packages.urllib3.connectionpool').setLevel(WARNING)
 
 
 class ResignCtrl:

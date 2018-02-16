@@ -25,40 +25,42 @@ class PipeFilesManager:
         self.agent_model = None
 
         self.pipe_folder = pipe_folder
-        self.pipe_names_in = None
-        self.pipe_names_out = None
+        self.pipe_names = []
+        self.pipe_idx = 0
 
     def make_pipes(self, n_pipes):
         os.makedirs(self.pipe_folder, exist_ok=True)
 
-        self.pipe_names_in = [self.get_pipe_name_in(i) for i in range(n_pipes)]
-        self.pipe_names_out = [self.get_pipe_name_out(i) for i in range(n_pipes)]
+        n = self.pipe_idx
+        pns = [self.get_pipe_name(n+i) for i in range(2*n_pipes)]
+        self.pipe_idx += len(pns)
+        self.pipe_names.extend(pns)
 
-        for pin in self.pipe_names_in:
-            os.mkfifo(pin)
-        for pout in self.pipe_names_out:
-            os.mkfifo(pout)
+        for pn in pns:
+            os.mkfifo(pn)
 
-        return [PipePair(x, y) for x,y in zip(self.pipe_names_in, self.pipe_names_out)]
+        return [PipePair(pns[2*i], pns[2*i+1]) for i in range(n_pipes)]
 
-    def get_pipe_name_in(self, i):
-        return f'{self.pipe_folder}/in_{i}_{time.time()}_{random.randint(100000, 999999)}'
-
-    def get_pipe_name_out(self, i):
-        return f'{self.pipe_folder}/out_{i}_{time.time()}_{random.randint(100000, 999999)}'
+    def get_pipe_name(self, i):
+        return f'{self.pipe_folder}/pp_{i}_{time.time()}_{random.randint(100000, 999999)}'
 
     def clear_pipes(self):
 
-        if self.pipe_names_in:
-            for pin in self.pipe_names_in:
-                os.unlink(pin)
+        if self.pipe_names:
+            for pn in self.pipe_names:
+                os.unlink(pn)
 
-        if self.pipe_names_out:
-            for pout in self.pipe_names_out:
-                os.unlink(pout)
+        self.pipe_names = []
 
-        self.pipe_names_in = None
-        self.pipe_names_out = None
+    def clear_a_pipe(self, pp):
+        if pp:
+            assert pp.pipe_in is None, 'close it first'
+            assert pp.pipe_out is None, 'close it first'
+
+            for n in (pp.in_name, pp.out_name):
+                assert n in self.pipe_names
+                self.pipe_names.remove(n)
+                os.unlink(n)
 
     def signal_exit(self):
         def clean(*args):
@@ -180,8 +182,8 @@ class PipePair:
     def write_int(self, i):
         self.write(int(i).to_bytes(4, 'big'))
 
-    def read_int(self, allow_empty):
-        b = self.read_exact(buffer_size=4, allow_empty=allow_empty)
+    def read_int(self, allow_empty, sleep_second=None):
+        b = self.read_exact(buffer_size=4, allow_empty=allow_empty, sleep_second=sleep_second)
         return int.from_bytes(b, 'big') if b else None
 
     def write_bytes(self, b, length=None):

@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+from json import JSONDecodeError
 from logging import getLogger
 # noinspection PyPep8Naming
 import keras.backend as K
@@ -78,11 +79,33 @@ class ReversiModel:
                 m.update(f.read())
             return m.hexdigest()
 
+    @staticmethod
+    def load_step_info(config_path):
+        if os.path.exists(config_path):
+            with open(config_path, "rt") as f:
+                try:
+                    config = json.load(f)
+                    return int(config['steps'])
+                except JSONDecodeError:
+                    return None
+                except ValueError:
+                    return None
+        else:
+            return None
+
     def load(self, config_path, weight_path):
         if os.path.exists(config_path) and os.path.exists(weight_path):
             logger.debug(f"loading model from {config_path}")
             with open(config_path, "rt") as f:
                 config = json.load(f)
+
+                if 'weight_digest' in config:
+                    exp_digest = config['weight_digest']
+                    act_digest = self.fetch_digest(weight_path)
+                    if exp_digest != act_digest:
+                        logger.debug(f"exp weight digest {exp_digest}, act {act_digest}")
+                        return None
+
                 try:
                     steps = int(config['steps'])
                 except ValueError:
@@ -100,11 +123,12 @@ class ReversiModel:
     def save(self, config_path, weight_path, steps=0):
         logger.debug(f"save model to {config_path}")
         with open(config_path, "wt") as f:
+            self.model.save_weights(weight_path)
+            self.digest = self.fetch_digest(weight_path)
             config = self.model.get_config()
             config['steps'] = steps
+            config['weight_digest'] = self.digest
             json.dump(config, f)
-            self.model.save_weights(weight_path)
-        self.digest = self.fetch_digest(weight_path)
         logger.debug(f"saved model digest {self.digest}")
 
 

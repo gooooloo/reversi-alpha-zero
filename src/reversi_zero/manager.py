@@ -76,6 +76,7 @@ def create_parser():
     parser.add_argument("--p1-name", help="p1-name", default=None)
     parser.add_argument("--p2-name", help="p2-name", default=None)
     parser.add_argument("--model-cache-size", help="", type=int, default=None)
+    parser.add_argument("--model-serving-step-check", help="", type=int, default=None)
     return parser
 
 
@@ -120,6 +121,8 @@ def setup(config: Config, args, setup_logger_flag):
     config.opts.p2_name = args.p2_name
     if args.n_minutes is not None:
         config.opts.n_minutes = args.n_minutes
+    if args.model_serving_step_check is not None:
+        config.opts.model_serving_step_check = args.model_serving_step_check
 
     if args.n_steps_model >= 0:
         model_dir = os.path.join(config.resource.generation_model_dir, config.resource.generation_model_dirname_tmpl % args.n_steps_model)

@@ -64,6 +64,7 @@ class Options:
     p1_name = None
     p2_name = None
     n_minutes = None
+    model_serving_step_check = None
 
 
 class ResourceConfig:
