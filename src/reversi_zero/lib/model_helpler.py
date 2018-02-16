@@ -9,7 +9,7 @@ logger = getLogger(__name__)
 
 
 def load_model_weight(model):
-    retry_count_max = 100
+    retry_count_max = 10000
     retry_count = 0
     while retry_count < retry_count_max:
         try:
@@ -18,7 +18,7 @@ def load_model_weight(model):
             logger.debug(e)
             logger.debug("will retry")
             # for whatever reason(e.g., network error, fds file synchronization error), we sleep and retry.
-            time.sleep(10)
+            time.sleep(0.1)
             retry_count += 1
 
     raise Exception(f"Failed to load model after {retry_count_max} tries!")
