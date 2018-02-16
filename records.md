@@ -243,7 +243,8 @@ Challenge 2
 
 Using the AlphaZero way -- no Evaluator. The corresponding codes are [commit 60e109d](https://github.com/gooooloo/reversi-alpha-zero/commit/60e109d30cadf0318a1837e7a5b865d707b69b7b).
 
-From step 45400, change model update/reloading frequentcy. [commit a960406](https://github.com/gooooloo/reversi-alpha-zero/commit/a9604062f0f53a42492a96453378aa6e0e8f4d81)
+- From step 45400, change model update/reloading frequentcy. [commit a960406](https://github.com/gooooloo/reversi-alpha-zero/commit/a9604062f0f53a42492a96453378aa6e0e8f4d81)
+- From step 48000, change model fix the model synchronization issue. [commit 73bb578](https://github.com/gooooloo/reversi-alpha-zero/commit/73bb578bd307e2bb68728561d0720b0a9cc5acf8)
 
 
 Challenge 2 - Opt/Self-Play Speed Ratio
