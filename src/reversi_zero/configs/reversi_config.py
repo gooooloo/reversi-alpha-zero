@@ -5,10 +5,20 @@
 
 class PlayDataConfig:
     def __init__(self):
-        # AGZ paper says: "... from the most recent 500,000 games of self-play.
-        # But I reduce to nb_game_in_file * max_file_num == 50,000 due to performance trade-off.
-        # Small nb_game_in_file make training data update more frequently, but
-        # large max_file_num make larger overhead reading file
+        # This is about how FRESH training data is.
+        #
+        # AGZ paper says: "... from the most recent 500,000 games of self-play."
+        # "... 40 days ... 29 million games of self-play ... 3.1 million mini-batches of 2,048 positions each"
+        # 29,000,000 games time equals to 6,348,800,000 trained position time.
+        #    500,000 games time equals to   110,000,000 trained position time.
+        # Says, the FRESHNESS is: no more than 110,000,000 trained positions old.
+        #
+        # If I am having training speed: 7 seconds per 3072 positions, that implies 250,651 seconds (about 70 hours).
+        # If I am having selfplay speed: 2.5 seconds per game, then that implies 100,000 recent games.
+        # If I am having selfplay speed: 5 seconds per game, then that implies 50,000 recent games.
+        #
+        # Small nb_game_in_file make training data update more frequently,
+        # Large max_file_num make larger overhead reading file
         self.nb_game_in_file = 5            # MOKE: 5
         self.max_file_num = 10000           # MOKE: 2000
 
@@ -36,7 +46,7 @@ class PlayConfig:
         self.v_resign_false_positive_fraction_t_min = 0.04  # AZ: UNKNOWN, MOKE: N/A
         self.n_games_to_self_play = 999999999
         self.render = False
-        self.model_check_interval_seconds = 10
+        self.model_check_interval_seconds = 400
 
 
 class TrainerConfig:
@@ -46,13 +56,14 @@ class TrainerConfig:
         self.start_total_steps = 0
         self.epoch_steps = 10               # AZ: 1?                                            MOKE: 200~9000
         # if saving too frequently, model saving time(12 seconds per saving)  will slow down opt speed
-        self.save_model_steps = 10          # AZ: 1?                                            MOKE: 200~9000
+        # I tune this about matching PlayConfig.model_check_interval_seconds
+        self.save_model_steps = 50          # AZ: 1?                                            MOKE: 200~9000
         self.generation_model_steps = 6400  # AZ: N/A.                                          MOKE: N/A
         self.min_data_size_to_learn = 12500 # AZ: N/A                                           MOKE: same
         self.lr_schedule = (  # (learning rate, before step count) # AZ: schedule UNKNOWN       MOKE: (0.01,100k),(0.001,200k),(0.0001,~)
             (0.2,    1500),
             (0.02,   20000),
-            (0.002,  100000),
+            (0.002,  400000),
             (0.0002, 9999999999)
         )
         self.need_eval = False
