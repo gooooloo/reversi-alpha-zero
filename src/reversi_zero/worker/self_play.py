@@ -21,8 +21,8 @@ class SelfWorker:
         self.config = config
         assert not self.config.opts.pipe_pairs
         self.pipe_files = PipeFilesManager.new_one(self.config)
-        if self.config.opts.gpu_mem_frac is None:
-            self.config.opts.gpu_mem_frac = 0.9
+        if self.config.opts.gpu_mem_frac is not None:
+            self.config.opts.gpu_mem_frac /= 2
 
     def start_model_cache_process(self, pipe_pairs):
         cmd = build_child_cmd(type='model_cache', config=self.config, pipe_pairs=pipe_pairs)
@@ -31,13 +31,14 @@ class SelfWorker:
         ])
         return start_child_proc(cmd=cmd)
 
-    def start_model_serving_process(self, pipe_pairs, gpu_mem_frac, model_serving_step_check=None):
+    def start_model_serving_process(self, pipe_pairs, model_serving_step_check=None):
         cmd = build_child_cmd(type='model_serving', config=self.config, pipe_pairs=pipe_pairs)
         cmd.extend([
             '--model-config-path', self.config.resource.model_config_path,
             '--model-weight-path', self.config.resource.model_weight_path,
-            '--gpu-mem-frac', f'{gpu_mem_frac}',
         ])
+        if self.config.opts.gpu_mem_frac is not None:
+            cmd.extend(['--gpu-mem-frac', f'{self.config.opts.gpu_mem_frac}'])
         if model_serving_step_check is not None:
             cmd.extend(['--model-serving-step-check', f'{model_serving_step_check}'])
         return start_child_proc(cmd=cmd)
@@ -62,9 +63,7 @@ class SelfWorker:
         model_serving_pps = pipe_pairs[:self.config.opts.n_workers+1]
         model_cache_pps = pipe_pairs[self.config.opts.n_workers+1:] if self.config.model_cache.model_cache_size else None
 
-        gpu_mem_frac = self.config.opts.gpu_mem_frac / 2  # will have 2 processes using GPU, so divided by 2
-
-        model_serving_process = self.start_model_serving_process(reverse_in_out(model_serving_pps), gpu_mem_frac)
+        model_serving_process = self.start_model_serving_process(reverse_in_out(model_serving_pps))
 
         serving_and_me_pp = model_serving_pps[0]
         serving_and_me_pp.open_read_nonblock()  # will close very late.
@@ -124,7 +123,7 @@ class SelfWorker:
                 tmp_serving_and_me_pp = self.pipe_files.make_pipes(1)[0]
                 tmp_model_serving_pps = [tmp_serving_and_me_pp] + model_serving_pps
                 tmp_serving_and_me_pp.open_read_nonblock()  # will close very late.
-                tmp_model_serving_process = self.start_model_serving_process(reverse_in_out(tmp_model_serving_pps), gpu_mem_frac, model_step)
+                tmp_model_serving_process = self.start_model_serving_process(reverse_in_out(tmp_model_serving_pps), model_step)
 
                 x = tmp_serving_and_me_pp.read_int(allow_empty=False)
                 assert x == MODEL_SERVING_READY
