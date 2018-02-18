@@ -123,9 +123,9 @@ class SelfWorker:
 
                 tmp_serving_and_me_pp = self.pipe_files.make_pipes(1)[0]
                 tmp_model_serving_pps = [tmp_serving_and_me_pp] + model_serving_pps
+                tmp_serving_and_me_pp.open_read_nonblock()  # will close very late.
                 tmp_model_serving_process = self.start_model_serving_process(reverse_in_out(tmp_model_serving_pps), gpu_mem_frac, model_step)
 
-                tmp_serving_and_me_pp.open_read_nonblock()  # will close very late.
                 x = tmp_serving_and_me_pp.read_int(allow_empty=False)
                 assert x == MODEL_SERVING_READY
 

@@ -1,5 +1,6 @@
 from logging import getLogger
 
+from src.reversi_zero.agent.api import MODEL_SERVING_READY, MODEL_SERVING_START, MODEL_SERVING_STARTED
 from src.reversi_zero.config import Config
 from src.reversi_zero.lib.pipe_helper import reverse_in_out
 from src.reversi_zero.lib.proc_helper import build_child_cmd, start_child_proc
@@ -36,5 +37,12 @@ class VersusNTestWorker(VersusWorkerBase):
                                          self.config.resource.model_weight_path,
                                          reverse_in_out([p1_model_ready_pp] + p1_model_pps))
 
-        p1_model_ready_pp.read_no_empty(99, sleep_retry=0.1)  # having response means 'ready', whatever it is.
+        x = p1_model_ready_pp.read_int(allow_empty=False)
+        assert x == MODEL_SERVING_READY
+        p1_model_ready_pp.open_write_nonblock()
+        p1_model_ready_pp.write_int(MODEL_SERVING_START)
+        p1_model_ready_pp.close_write()
+        x = p1_model_ready_pp.read_int(allow_empty=False)
+        assert x == MODEL_SERVING_STARTED
+        
         p1_model_ready_pp.close_read()
