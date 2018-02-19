@@ -281,14 +281,16 @@ Challenge 3
 Using the AlphaZero way -- no Evaluator. The corresponding codes are [commit 60e109d](https://github.com/gooooloo/reversi-alpha-zero/commit/60e109d30cadf0318a1837e7a5b865d707b69b7b).
 
 - Compared with Challenge 2, change is I reload model every 400 seconds, longer than a typically game length (300+ seconds).
+- From about step 8000, codes are [commit 41ee8ee](https://github.com/gooooloo/reversi-alpha-zero/commit/41ee8eeddccf2f0ccc327740978a4aab3766ec59)
 
 
 Challenge 3 - AI Strength Record
 ---------
 
 |           |         |  Ntest: 1 |  Ntest: 1 |  Ntest: 2 |  Ntest: 2 |  Ntest: 3 |  Ntest: 3 |PolicyLoss | ValueLoss |MovesTillNow|
-|-----------|--------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|
-|step-     0|  800 sim|  B 1/0/4  |  W 1/0/4  |           |           |           |           |     -     |     -     |     0     |
-|step-  6400|  800 sim|           |W **5/0/0**|           |           |           |           |     -     |     -     |1282180 * 8|
-|step- 12800|  800 sim|           |           |           |           |           |           |  1.3831   |   0.5729  |2551232 * 8|
-|step- 19200|  800 sim|           |           |           |           |           |           |  1.1385   |   0.5662  |4134764 * 8|
+|-----------|--------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:----------:|
+|step-     0|  800 sim|  B 1/0/4  |  W 1/0/4  |           |           |           |           |     -     |     -     |      0     |
+|step-  6400|  800 sim|           |W **5/0/0**|           |           |           |           |     -     |     -     | 1282180 * 8|
+|step- 12800|  800 sim|           |           |           |           |           |           |  1.3831   |   0.5729  | 2551232 * 8|
+|step- 19200|  800 sim|           |           |           |           |           |           |  1.1385   |   0.5662  | 4134764 * 8|
+|step- 25600|  800 sim|B **4/0/1**|           |           |           |           |           |  0.9961   |   0.5541  | 5642099 * 8|
