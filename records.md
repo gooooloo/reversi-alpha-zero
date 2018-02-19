@@ -245,6 +245,7 @@ Using the AlphaZero way -- no Evaluator. The corresponding codes are [commit 60e
 
 - From step 45400, change model update/reloading frequentcy. [commit a960406](https://github.com/gooooloo/reversi-alpha-zero/commit/a9604062f0f53a42492a96453378aa6e0e8f4d81)
 - From step 48000, change model fix the model synchronization issue. [commit 73bb578](https://github.com/gooooloo/reversi-alpha-zero/commit/73bb578bd307e2bb68728561d0720b0a9cc5acf8)
+- I observe loss doesn't change from about step 30000+. At about step 50000, I give up. Maybe it is because self play's model changes too frequently, so 1 game is using about 5 models?
 
 
 Challenge 2 - Opt/Self-Play Speed Ratio
@@ -273,3 +274,21 @@ Challenge 2 - AI Strength Record
 |step- 38400|  800 sim|           |           |           |           |           |           |
 |step- 44800|  800 sim|           |           |           |           |           |           |
 
+
+Challenge 3
+---------
+
+Using the AlphaZero way -- no Evaluator. The corresponding codes are [commit 60e109d](https://github.com/gooooloo/reversi-alpha-zero/commit/60e109d30cadf0318a1837e7a5b865d707b69b7b).
+
+- Compared with Challenge 2, change is I reload model every 400 seconds, longer than a typically game length (300+ seconds).
+
+
+Challenge 3 - AI Strength Record
+---------
+
+|           |         |  Ntest: 1 |  Ntest: 1 |  Ntest: 2 |  Ntest: 2 |  Ntest: 3 |  Ntest: 3 |PolicyLoss | ValueLoss |MovesTillNow|
+|-----------|--------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|
+|step-     0|  800 sim|  B 1/0/4  |  W 1/0/4  |           |           |           |           |     -     |     -     |     0     |
+|step-  6400|  800 sim|           |W **5/0/0**|           |           |           |           |     -     |     -     |1282180 * 8|
+|step- 12800|  800 sim|           |           |           |           |           |           |  1.3831   |   0.5729  |2551232 * 8|
+|step- 19200|  800 sim|           |           |           |           |           |           |  1.1385   |   0.5662  |4134764 * 8|
