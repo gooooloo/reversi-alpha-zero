@@ -282,6 +282,7 @@ Using the AlphaZero way -- no Evaluator. The corresponding codes are [commit 60e
 
 - Compared with Challenge 2, change is I reload model every 400 seconds, longer than a typically game length (300+ seconds).
 - From about step 8000, codes are [commit 41ee8ee](https://github.com/gooooloo/reversi-alpha-zero/commit/41ee8eeddccf2f0ccc327740978a4aab3766ec59)
+- From step 38690, codes are [commit 9829645](https://github.com/gooooloo/reversi-alpha-zero/commit/9829645ef29e678b6c770cd429c67b3f72537ecb)
 
 
 Challenge 3 - AI Strength Record
@@ -295,3 +296,4 @@ Challenge 3 - AI Strength Record
 |step- 19200|  800 sim|           |           |           |           |           |           |  1.1385   |   0.5662  | 4134764 * 8|
 |step- 25600|  800 sim|B **4/0/1**|           |           |           |           |           |  0.9961   |   0.5541  | 5642099 * 8|
 |step- 32000|  800 sim|  B 2/0/3  |           |           |           |           |           |  0.9586   |   0.5556  | 6854500 * 8|
+|step- 38400|  800 sim|           |           |           |           |           |           |  0.8732   |   0.5342  | 8407176 * 8|
