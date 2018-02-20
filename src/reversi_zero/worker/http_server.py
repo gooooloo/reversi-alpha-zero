@@ -1,6 +1,7 @@
 import os
 from logging import getLogger
 
+from src.reversi_zero.agent.api import MODEL_SERVING_READY, MODEL_SERVING_START, MODEL_SERVING_STARTED
 from src.reversi_zero.config import Config
 from src.reversi_zero.lib.http import HttpServer
 from src.reversi_zero.lib.model_helpler import ask_model_dir
@@ -33,7 +34,13 @@ class HTTPServerWorker:
         self.start_model_serving_process(self.config.resource.model_config_path,
                                          self.config.resource.model_weight_path,
                                          [pipe_pairs[0].reverse_in_out(), pipe_pairs[2]])
-        pipe_pairs[0].read_no_empty(99, sleep_retry=0.1)  # having response means 'ready', whatever it is.
+        x = pipe_pairs[0].read_int(allow_empty=False)
+        assert x == MODEL_SERVING_READY
+        pipe_pairs[0].open_write_nonblock()
+        pipe_pairs[0].write_int(MODEL_SERVING_START)
+        pipe_pairs[0].close_write()
+        x = pipe_pairs[0].read_int(allow_empty=False)
+        assert x == MODEL_SERVING_STARTED
         pipe_pairs[0].close_read()
 
         self.start_gtp_server_process([pipe_pairs[1].reverse_in_out(), pipe_pairs[2].reverse_in_out()])
