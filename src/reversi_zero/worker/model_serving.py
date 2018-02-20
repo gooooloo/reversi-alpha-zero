@@ -8,8 +8,7 @@ logger = getLogger(__name__)
 
 
 def start(config: Config):
-    if config.opts.gpu_mem_frac is not None:
-        tf_util.set_session_config(per_process_gpu_memory_fraction=config.opts.gpu_mem_frac)
+    tf_util.set_session_config(per_process_gpu_memory_fraction=config.opts.gpu_mem_frac, allow_growth=True)
     return ModelServingWorker(config).start()
 
 
