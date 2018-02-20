@@ -327,7 +327,11 @@ class Node(object):
             return
 
         self.p = p[legal_moves == 1]  # this.p is (typically much) shorter than p
-        assert 0 < len(self.p) < len(legal_moves), f'{len(self.p)}, {len(legal_moves)} '
+        assert 0 < len(self.p) <= len(legal_moves), f'{len(self.p)}, {len(legal_moves)} '
+        if abs(np.sum(self.p)) < 1e-10:
+            self.p /= len(self.p)
+        else:
+            self.p /= np.sum(self.p)
 
         self.v = v
         self.W = np.zeros([len(self.p)])
