@@ -281,7 +281,7 @@ Challenge 3
 Using the AlphaZero way -- no Evaluator. The corresponding codes are [commit 60e109d](https://github.com/gooooloo/reversi-alpha-zero/commit/60e109d30cadf0318a1837e7a5b865d707b69b7b).
 
 - Compared with Challenge 2, change is I reload model every 400 seconds, longer than a typically game length (300+ seconds).
-- Moves number in training pool is about 2,400,000 * 8 moves to 2,750,000 * 8 moves. (So according to 'MovesTillNow' changing speed as below, it is roughly about 10,000 training step).
+- Moves number in training pool is about 2,400,000 * 8 moves to 2,750,000 * 8 moves. (So according to 'Total Moves' changing speed as below, it is roughly about 10,000 training step).
 - From about step 8000, codes are [commit 41ee8ee](https://github.com/gooooloo/reversi-alpha-zero/commit/41ee8eeddccf2f0ccc327740978a4aab3766ec59)
 - From step 38690, codes are [commit 9829645](https://github.com/gooooloo/reversi-alpha-zero/commit/9829645ef29e678b6c770cd429c67b3f72537ecb). It fixes a probility bug in MCTS.
 
@@ -289,7 +289,7 @@ Using the AlphaZero way -- no Evaluator. The corresponding codes are [commit 60e
 Challenge 3 - AI Strength Record
 ---------
 
-|           |         |  Ntest: 1 |  Ntest: 1 |  Ntest: 2 |  Ntest: 2 |  Ntest: 3 |  Ntest: 3 |Policy Loss| Value Loss|MovesTillNow|
+|           |         |  Ntest: 1 |  Ntest: 1 |  Ntest: 2 |  Ntest: 2 |  Ntest: 3 |  Ntest: 3 |Policy Loss| Value Loss|Total Moves |
 |-----------|--------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:----------:|
 |step-     0|  800 sim|  B 1/0/4  |  W 1/0/4  |           |           |           |           |     -     |     -     |      0     |
 |step-  6400|  800 sim|           |W **5/0/0**|           |           |           |           |     -     |     -     | 1282180 * 8|
@@ -303,7 +303,7 @@ Challenge 3 - AI Strength Record
 |step- 57600|  800 sim|B **5/0/0**|W **5/0/0**|B **5/0/0**|W **5/0/0**|B **5/0/0**|W **5/0/0**|  0.5415   |   0.4568  |13434479 * 8|
 
 
-|           |         |  Ntest:4  |  Ntest:4  |  Ntest:5  |  Ntest:5  |  Ntest:6  |  Ntest:6  |PolicyLoss | ValueLoss |MovesTillNow|
+|           |         |  Ntest: 4 |  Ntest: 4 |  Ntest: 5 |  Ntest: 5 |  Ntest: 6 |  Ntest: 6 |Policy Loss| Value Loss|Total Moves |
 |-----------|--------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:----------:|
 |step- 51200|  800 sim|B **5/0/0**|W **4/0/1**|B **4/1/0**|W **5/0/0**|B **4/0/1**|W **5/0/0**|  0.5586   |   0.4675  |12066949 * 8|
 |step- 57600|  800 sim|B **4/1/0**|W **5/0/0**|B **3/0/2**|W **5/0/0**|B **5/0/0**|W **5/0/0**|  0.5415   |   0.4568  |13434479 * 8|
@@ -311,21 +311,21 @@ Challenge 3 - AI Strength Record
 
 
 
-|           |         |  Ntest:7  |  Ntest:7  |  Ntest:8  |  Ntest:8  |  Ntest:9  |  Ntest:9  |PolicyLoss | ValueLoss |MovesTillNow|
+|           |         |  Ntest: 7 |  Ntest: 7 |  Ntest: 8 |  Ntest: 8 |  Ntest: 9 |  Ntest: 9 |Policy Loss| Value Loss|Total Moves |
 |-----------|--------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:----------:|
 |step- 51200|  800 sim|  B 1/0/4  |W **5/0/0**|B **0/5/0**|W **4/0/1**|B **0/5/0**|W **0/5/0**|  0.5586   |   0.4675  |12066949 * 8|
 |step- 57600|  800 sim|           |W **5/0/0**|  B 0/1/4  |  W 1/1/3  |B **5/0/0**|W **5/0/0**|  0.5415   |   0.4568  |13434479 * 8|
 |step- 64000|  800 sim|  B 1/0/4  |W **5/0/0**|B **5/0/0**|W **5/0/0**|  B 2/0/3  |W **0/5/0**|  0.5408   |   0.4546  |14791508 * 8| 
 
 
-|           |         | Ntest:10  | Ntest:10  | Ntest:11  | Ntest:11  | Ntest:12  | Ntest:12  |PolicyLoss | ValueLoss |MovesTillNow|
+|           |         | Ntest: 10 | Ntest: 10 | Ntest: 11 | Ntest: 11 | Ntest: 12 | Ntest: 12 |Policy Loss| Value Loss|Total Moves |
 |-----------|--------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:----------:|
 |step- 51200|  800 sim|           |           |           |W **0/5/0**|           |           |  0.5586   |   0.4675  |12066949 * 8|
 |step- 57600|  800 sim|           |  W 0/1/4  |           |W **0/5/0**|           |  W 0/2/3  |  0.5415   |   0.4568  |13434479 * 8|
 |step- 64000|  800 sim|  B 2/0/3  |W **5/0/0**|B **4/0/1**|           |B **3/1/1**|           |  0.5408   |   0.4546  |14791508 * 8|
 
 
-|           |         | Ntest:13  | Ntest:13  | Ntest:14  | Ntest:14  | Ntest:15  | Ntest:15  |PolicyLoss | ValueLoss |MovesTillNow|
+|           |         | Ntest: 13 | Ntest: 13 | Ntest: 14 | Ntest: 14 | Ntest: 15 | Ntest: 15 |Policy Loss| Value Loss|Total Moves |
 |-----------|--------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:----------:|
 |step- 64000|  800 sim|           |  W 0/4/1  |           |           |           |           |  0.5408   |   0.4546  |14791508 * 8| 
 
