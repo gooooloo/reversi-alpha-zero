@@ -63,7 +63,7 @@ class TrainerConfig:
         self.lr_schedule = (  # (learning rate, before step count) # AZ: schedule UNKNOWN       MOKE: (0.01,100k),(0.001,200k),(0.0001,~)
             (0.2,    1500),
             (0.02,   20000),
-            (0.002,  400000),
+            (0.002,  60000),
             (0.0002, 9999999999)
         )
         self.need_eval = False
