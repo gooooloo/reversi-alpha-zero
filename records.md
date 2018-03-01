@@ -285,7 +285,7 @@ Using the AlphaZero way -- no Evaluator. The corresponding codes are [commit 60e
 - From about step 8000, codes are [commit 41ee8ee](https://github.com/gooooloo/reversi-alpha-zero/commit/41ee8eeddccf2f0ccc327740978a4aab3766ec59)
 - From step 38690, codes are [commit 9829645](https://github.com/gooooloo/reversi-alpha-zero/commit/9829645ef29e678b6c770cd429c67b3f72537ecb). It fixes a probility bug in MCTS.
 - From step 77600, codes are [commit 95e27a0](https://github.com/gooooloo/reversi-alpha-zero/commit/95e27a0164e731bae5fbc9210e487f6a38805e6c). It changes learning rate from 0.002 to 0.0002.
-
+- From step 112030, self play cannot resign.
 
 Challenge 3 - AI Strength Record
 ---------
@@ -376,7 +376,11 @@ I also evaluated with 30 minutes per game.
 |           |         | Ntest: 22 | Ntest: 22 | Ntest: 23 | Ntest: 23 | Ntest: 24 | Ntest: 24 |           |           |            |
 |step- 90410|   30 min|     -     |           |     -     |           |     -     |W **0/2/0**|  0.4071   |   0.3160  |23432337 * 8|
 |step-103570|   30 min|     -     |  W 0/1/1  |     -     |W **1/0/1**|     -     |W **0/2/0**|  0.3376   |   0.2409  |27247608 * 8|
+|step-109970|   30 min|           |           |           |  W 0/1/1  |           |  W 0/1/1  |     -     |      -    |29260802 * 8|
 |           |         | Ntest: 25 | Ntest: 25 | Ntest: 26 | Ntest: 26 | Ntest: 27 | Ntest: 27 |           |           |            |
 |step-103570|   30 min|     -     |  W 0/1/1  |     -     |     -     |     -     |     -     |  0.3376   |   0.2409  |27247608 * 8|
-
-
+|step-109970|   30 min|           |W **2/0/0**|           |           |           |W **2/0/0**|     -     |      -    |29260802 * 8|
+|           |         | Ntest: 28 | Ntest: 28 | Ntest: 29 | Ntest: 29 | Ntest: 30 | Ntest: 30 |           |           |            |
+|step-109970|   30 min|           |           |           |           |           |W **2/0/0**|     -     |      -    |29260802 * 8|
+|           |         | Ntest: 31 | Ntest: 31 | Ntest: 29 | Ntest: 29 | Ntest: 30 | Ntest: 30 |           |           |            |
+|step-109970|   30 min|  B 0/1/1  |W **2/0/0**|     -     |     -     |     --    |     -     |     -     |      -    |29260802 * 8|
