@@ -382,5 +382,5 @@ I also evaluated with 30 minutes per game.
 |step-109970|   30 min|           |W **2/0/0**|           |           |           |W **2/0/0**|     -     |      -    |29260802 * 8|
 |           |         | Ntest: 28 | Ntest: 28 | Ntest: 29 | Ntest: 29 | Ntest: 30 | Ntest: 30 |           |           |            |
 |step-109970|   30 min|           |           |           |           |           |W **2/0/0**|     -     |      -    |29260802 * 8|
-|           |         | Ntest: 31 | Ntest: 31 | Ntest: 29 | Ntest: 29 | Ntest: 30 | Ntest: 30 |           |           |            |
+|           |         | Ntest: 31 | Ntest: 31 | Ntest: 32 | Ntest: 32 | Ntest: 33 | Ntest: 33 |           |           |            |
 |step-109970|   30 min|  B 0/1/1  |W **2/0/0**|     -     |     -     |     --    |     -     |     -     |      -    |29260802 * 8|
