@@ -8,7 +8,7 @@ from src.reversi_zero.agent.player import EvaluatePlayer
 from src.reversi_zero.config import Config
 from src.reversi_zero.lib import gtp
 from src.reversi_zero.lib.gtp import GTPClient, WHITE, BLACK
-from src.reversi_zero.lib.http import HttpClient
+from src.reversi_zero.lib.http import HttpPlayClient
 from src.reversi_zero.lib.pipe_helper import PipeFilesManager
 from src.reversi_zero.lib.proc_helper import build_child_cmd, start_child_proc
 
@@ -47,7 +47,7 @@ class PlayWithHuman:
         else:
             url = self.config.opts.http_url
 
-        self.http_client = HttpClient(url)
+        self.http_client = HttpPlayClient(url)
         self.next_color = None
 
     def start_http_server_process(self, pipe_pairs, port):

@@ -9,24 +9,31 @@ from .lib.pipe_helper import load_pipe_pairs_names
 logger = getLogger(__name__)
 
 CMD_LIST = [
+    # train
+    'opt',  # training model, GPU required.
+    'self', # self play, GPU required.
+    'eval', # Evaluator, only for AlphaGoZero way. GPU required.
+    'fs_model',  # File server of model. No GPU usage.
+    'fs_resign', # File server of resign management. No GPU usage.
+    'fs_play_data', # File server of play data. No GPU usage.
+
+    # play
     'elo_p1',
     'elo_p1_ntest',
-    'eval',
+    'league'
+    'play_gui',
+    'http_server',
+
+    # internal
     'gtp_server',
     'gtp_server_ntest',
-    'http_server',
     'model_serving',
     'model_cache',
-    'opt',
-    'play_gui',
-    'res',
-    'self',
     'self_play_kernel',
     'versus_a_game_kernel',
     'versus_a_game_kernel_ntest',
     'versus_n_games',
     'versus_n_games_ntest',
-    'league'
 ]
 
 
@@ -69,6 +76,7 @@ def create_parser():
     parser.add_argument("--elo-k", help="", type=int, default=32)
     parser.add_argument("--http-port", help="", type=int, default=8888)
     parser.add_argument("--http-url", help="", default=None)
+    parser.add_argument("--http-server-type", help="", default=None)
     parser.add_argument("--ask-model", help="", type=str2bool, default=False)
     parser.add_argument("--league-result", help="",  default='./league-result.txt')
     parser.add_argument("--ntest-depth", help="",  type=int, default=1)
@@ -81,6 +89,7 @@ def create_parser():
 
 
 def setup(config: Config, args, setup_logger_flag):
+    config.opts.cmd = args.cmd
     config.opts.n_workers = args.n_workers
     config.opts.n_games = args.n_games
     if args.gpu_mem_frac is not None:
@@ -123,6 +132,8 @@ def setup(config: Config, args, setup_logger_flag):
         config.opts.n_minutes = args.n_minutes
     if args.model_serving_step_check is not None:
         config.opts.model_serving_step_check = args.model_serving_step_check
+    if args.http_server_type is not None:
+        config.opts.http_server_type = args.http_server_type
 
     if args.n_steps_model >= 0:
         model_dir = os.path.join(config.resource.generation_model_dir, config.resource.generation_model_dirname_tmpl % args.n_steps_model)
@@ -173,7 +184,11 @@ def start():
         from .play_game import gui as worker
     elif args.cmd == 'elo_p1':
         from .worker import elo_p1 as worker
-    elif args.cmd == 'res':
+    elif args.cmd == 'fs_resign':
+        from .worker import resignation as worker
+    elif args.cmd == 'fs_model':
+        from .worker import resignation as worker
+    elif args.cmd == 'fs_play_data':
         from .worker import resignation as worker
     elif args.cmd == 'model_serving':
         from .worker import model_serving as worker

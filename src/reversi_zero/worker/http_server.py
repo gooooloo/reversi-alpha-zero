@@ -3,7 +3,7 @@ from logging import getLogger
 
 from src.reversi_zero.agent.api import MODEL_SERVING_READY, MODEL_SERVING_START, MODEL_SERVING_STARTED
 from src.reversi_zero.config import Config
-from src.reversi_zero.lib.http import HttpServer
+from src.reversi_zero.lib.http import HttpPlayServer, HttpFileServer
 from src.reversi_zero.lib.model_helpler import ask_model_dir
 from src.reversi_zero.lib.pipe_helper import PipeFilesManager
 from src.reversi_zero.lib.proc_helper import build_child_cmd, start_child_proc
@@ -16,10 +16,21 @@ def start(config: Config):
         model_dir = ask_model_dir(config)
         config.resource.model_config_path = os.path.join(model_dir, config.resource.model_config_filename)
         config.resource.model_weight_path = os.path.join(model_dir, config.resource.model_weight_filename)
-    return HTTPServerWorker(config).start()
+
+    http_server_type = config.opts.cmd
+    if http_server_type == 'http_server':
+        return HTTPPlayServerWorker(config).start()
+    elif http_server_type == 'fs_model':
+        return HTTPModelFileServerWorker(config).start()
+    elif http_server_type == 'fs_play_data':
+        return HTTPPlayDataFileServerWorker(config).start()
+    elif http_server_type == 'fs_resign':
+        return HTTPResFileServerWorker(config).start()
+    else:
+        raise Exception("error")
 
 
-class HTTPServerWorker:
+class HTTPPlayServerWorker:
 
     def __init__(self, config: Config):
         self.config = config
@@ -45,7 +56,7 @@ class HTTPServerWorker:
 
         self.start_gtp_server_process([pipe_pairs[1].reverse_in_out(), pipe_pairs[2].reverse_in_out()])
 
-        http_server = HttpServer(pipe_pairs[1], self.config.opts.http_port)
+        http_server = HttpPlayServer(pipe_pairs[1], self.config.opts.http_port)
         if self.parent_pipe_pair:
             self.parent_pipe_pair.open_write_nonblock()
             self.parent_pipe_pair.write('ready'.encode())
@@ -63,3 +74,39 @@ class HTTPServerWorker:
             '--model-weight-path', model_weight_path,
         ])
         return start_child_proc(cmd=cmd)
+
+
+class HTTPModelFileServerWorker:
+
+    def __init__(self, config: Config):
+        self.config = config
+
+    def start(self):
+        folder = '/tmp/'  # TODO
+        port = self.config.opts.http_port
+        http_server = HttpFileServer(folder=folder, port=port)
+        http_server.start()
+
+
+class HTTPPlayDataFileServerWorker:
+
+    def __init__(self, config: Config):
+        self.config = config
+
+    def start(self):
+        folder = 'TODO'
+        port = self.config.opts.http_port
+        http_server = HttpFileServer(folder=folder, port=port)
+        http_server.start()
+
+
+class HTTPResFileServerWorker:
+
+    def __init__(self, config: Config):
+        self.config = config
+
+    def start(self):
+        folder = 'TODO'
+        port = self.config.opts.http_port
+        http_server = HttpFileServer(folder=folder, port=port)
+        http_server.start()
