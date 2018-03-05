@@ -18,17 +18,11 @@ class VersusNTestWorker(VersusWorkerBase):
         super().__init__(*args, **kwargs)
 
     def start_1_game_process(self, pps, p1_first):
-        cmd = build_child_cmd(type='versus_a_game_kernel_ntest', config=self.config, pipe_pairs=pps)
-        cmd.extend([
-            '--ntest-depth', f'{self.config.opts.ntest_depth}',
-            '--p1-name', self.config.opts.p1_name,
-            '--p2-name', self.config.opts.p2_name,
-            '--p1-first', f'{p1_first}',
-        ])
-        if self.config.opts.save_versus_dir:
-            cmd.extend(["--save-versus-dir", self.config.opts.save_versus_dir])
-        if self.config.opts.n_minutes:
-            cmd.extend(['--n-minutes', f'{self.config.opts.n_minutes}'])
+        import copy
+        opts = copy.copy(self.config.opts)
+        opts.p1_first = p1_first
+
+        cmd = build_child_cmd(type='versus_a_game_kernel_ntest', opts=opts, pipe_pairs=pps)
         return start_child_proc(cmd=cmd, nocuda=True)
 
     def start_model_serving_processes(self, p1_model_ready_pp, p2_model_ready_pp, p1_model_pps, p2_model_pps):

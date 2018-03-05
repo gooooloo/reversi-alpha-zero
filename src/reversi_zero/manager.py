@@ -1,8 +1,9 @@
 import argparse
+import json
 import os
 from logging import getLogger
 
-from .config import Config
+from .config import Config, Options
 from .lib.logger import setup_logger
 from .lib.pipe_helper import load_pipe_pairs_names
 
@@ -50,119 +51,132 @@ def str2bool(v):
 def create_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("cmd", help="what to do", choices=CMD_LIST)
-    parser.add_argument("--total-step", help="set TrainerConfig.start_total_steps", type=int)
+    parser.add_argument("--ask-model", help="", type=str2bool, default=False)
+    parser.add_argument("--can-resign", help="if player can resign when self play", type=str2bool, default=True)
+    parser.add_argument("--config-file", help="", default=None)
+    parser.add_argument("--elo-k", help="", type=int, default=32)
+    parser.add_argument("--env", help="which env to train", default="reversi")
     parser.add_argument("--gpu-mem-frac", help="gpu memory fraction", default=None)
+    parser.add_argument("--http-port", help="", type=int, default=8888)
+    parser.add_argument("--http-server-type", help="", default=None)
+    parser.add_argument("--http-url", help="", default=None)
+    parser.add_argument("--league-result", help="",  default='./league-result.txt')
+    parser.add_argument("--model-cache-size", help="", type=int, default=None)
     parser.add_argument("--model-config-path", help="model-config-path", default=None)
+    parser.add_argument("--model-serving-step-check", help="", type=int, default=None)
     parser.add_argument("--model-weight-path", help="model-weight-path", default=None)
+    parser.add_argument("--n-games", help="how many games to self play", type=int, default=1)
+    parser.add_argument("--n-minutes", help="how many minutes per game per player", type=int, default=None)
+    parser.add_argument("--n-sims", help="how many simulations per move", type=int, default=None)
+    parser.add_argument("--n-steps-model", help="which model( after how many training steps) to play", type=int, default=-1)
+    parser.add_argument("--n-workers", help="how many processes as workers", type=int, default=1)
+    parser.add_argument("--need-eval", help="tell opt new model needs evaluation. 'opt' cmd only", type=str2bool, default=False)
+    parser.add_argument("--ntest-depth", help="",  type=int, default=1)
+    parser.add_argument("--p1-elo", help="", type=int, default=0)
+    parser.add_argument("--p1-first", help="", default=None)
     parser.add_argument("--p1-model-config-path", help="p1-model-config-path", default=None)
     parser.add_argument("--p1-model-weight-path", help="p1-model-weight-path", default=None)
+    parser.add_argument("--p1-n-sims", help="how many simulations per move for p1", type=int, default=None)
+    parser.add_argument("--p1-name", help="p1-name", default=None)
+    parser.add_argument("--p2-elo", help="", type=int, default=0)
     parser.add_argument("--p2-model-config-path", help="p2-model-config-path", default=None)
     parser.add_argument("--p2-model-weight-path", help="p2-model-weight-path", default=None)
-    parser.add_argument("--env", help="which env to train", default="reversi")
-    parser.add_argument("--n-games", help="how many games to self play", type=int, default=1)
-    parser.add_argument("--n-workers", help="how many processes as workers", type=int, default=1)
-    parser.add_argument("--n-sims", help="how many simulations per move", type=int, default=None)
-    parser.add_argument("--n-minutes", help="how many minutes per game per player", type=int, default=None)
-    parser.add_argument("--n-steps-model", help="which model( after how many training steps) to play", type=int, default=-1)
-    parser.add_argument("--p1-n-sims", help="how many simulations per move for p1", type=int, default=None)
     parser.add_argument("--p2-n-sims", help="how many simulations per move for p2", type=int, default=None)
-    parser.add_argument("--p1-first", help="", default=None)
-    parser.add_argument("--need-eval", help="tell opt new model needs evaluation. 'opt' cmd only", type=str2bool, default=False)
-    parser.add_argument("--can-resign", help="if player can resign when self play", type=str2bool, default=True)
-    parser.add_argument("--render", help="if render in console when self play", type=str2bool, default=False)
-    parser.add_argument("--pipes", help="", default=None)
-    parser.add_argument("--p1-elo", help="", type=int, default=0)
-    parser.add_argument("--p2-elo", help="", type=int, default=0)
-    parser.add_argument("--elo-k", help="", type=int, default=32)
-    parser.add_argument("--http-port", help="", type=int, default=8888)
-    parser.add_argument("--http-url", help="", default=None)
-    parser.add_argument("--http-server-type", help="", default=None)
-    parser.add_argument("--ask-model", help="", type=str2bool, default=False)
-    parser.add_argument("--league-result", help="",  default='./league-result.txt')
-    parser.add_argument("--ntest-depth", help="",  type=int, default=1)
-    parser.add_argument("--save-versus-dir", help="", default=None)
-    parser.add_argument("--p1-name", help="p1-name", default=None)
     parser.add_argument("--p2-name", help="p2-name", default=None)
-    parser.add_argument("--model-cache-size", help="", type=int, default=None)
-    parser.add_argument("--model-serving-step-check", help="", type=int, default=None)
+    parser.add_argument("--pipes", help="", default=None)
+    parser.add_argument("--render", help="if render in console when self play", type=str2bool, default=False)
+    parser.add_argument("--save-versus-dir", help="", default=None)
+    parser.add_argument("--total-step", help="set TrainerConfig.start_total_steps", type=int)
     return parser
 
 
-def setup(config: Config, args, setup_logger_flag):
-    config.opts.cmd = args.cmd
-    config.opts.n_workers = args.n_workers
-    config.opts.n_games = args.n_games
-    if args.gpu_mem_frac is not None:
-        try: config.opts.gpu_mem_frac = float(args.gpu_mem_frac)
-        except ValueError: pass
-    if args.pipes is not None:
-        config.opts.pipe_pairs = load_pipe_pairs_names(args.pipes)
-    if args.p1_model_config_path is not None:
-        config.opts.p1_model_config_path = args.p1_model_config_path
-    if args.p1_model_weight_path is not None:
-        config.opts.p1_model_weight_path = args.p1_model_weight_path
-    if args.p2_model_config_path is not None:
-        config.opts.p2_model_config_path = args.p2_model_config_path
-    if args.p2_model_weight_path is not None:
-        config.opts.p2_model_weight_path = args.p2_model_weight_path
-    if args.p1_elo is not None:
-        config.opts.p1_elo = args.p1_elo
-    if args.p2_elo is not None:
-        config.opts.p2_elo = args.p2_elo
-    if args.elo_k is not None:
-        config.opts.elo_k = args.elo_k
-    config.opts.http_url = args.http_url
-    config.opts.http_port = args.http_port
-    config.opts.ask_model = args.ask_model
-    if args.p1_n_sims is not None:
-        config.opts.p1_n_sims = args.p1_n_sims
-    if args.p2_n_sims is not None:
-        config.opts.p2_n_sims = args.p2_n_sims
-    config.opts.league_result = args.league_result
-    if args.p1_first:
-        if args.p1_first in ('always', 'never'):
-            config.opts.p1_first = args.p1_first
-        else:
-            config.opts.p1_first = str2bool(args.p1_first)
-    config.opts.ntest_depth = args.ntest_depth
-    config.opts.save_versus_dir = args.save_versus_dir
-    config.opts.p1_name = args.p1_name
-    config.opts.p2_name = args.p2_name
-    if args.n_minutes is not None:
-        config.opts.n_minutes = args.n_minutes
-    if args.model_serving_step_check is not None:
-        config.opts.model_serving_step_check = args.model_serving_step_check
-    if args.http_server_type is not None:
-        config.opts.http_server_type = args.http_server_type
+def args_to_opts(args):
+    opts = Options()
 
-    if args.n_steps_model >= 0:
-        model_dir = os.path.join(config.resource.generation_model_dir, config.resource.generation_model_dirname_tmpl % args.n_steps_model)
+    if args.config_file is not None:
+        with open(args.config_file, 'rt') as f:
+            d = json.load(f)
+            for k,v in d.items():
+                if v is not None and hasattr(opts, k):
+                    setattr(opts, k, v)
+
+    # overwrite what was set from config_file
+    if args.ask_model is not None: opts.ask_model = args.ask_model
+    if args.can_resign is not None: opts.can_resign = args.can_resign
+    if args.cmd is not None: opts.cmd = args.cmd
+    if args.elo_k is not None: opts.elo_k = args.elo_k
+    if args.env is not None: opts.env = args.env
+    if args.http_port is not None: opts.http_port = args.http_port
+    if args.http_server_type is not None: opts.http_server_type = args.http_server_type
+    if args.http_url is not None: opts.http_url = args.http_url
+    if args.league_result is not None: opts.league_result = args.league_result
+    if args.model_cache_size is not None: opts.model_cache_size = args.model_cache_size
+    if args.model_config_path is not None: opts.model_config_path = args.model_config_path
+    if args.model_serving_step_check is not None: opts.model_serving_step_check = args.model_serving_step_check
+    if args.model_weight_path is not None: opts.model_weight_path = args.model_weight_path
+    if args.n_games is not None: opts.n_games = args.n_games
+    if args.n_minutes is not None: opts.n_minutes = args.n_minutes
+    if args.n_sims is not None: opts.n_sims = args.n_sims
+    if args.n_steps_model is not None: opts.n_steps_model = args.n_steps_model
+    if args.n_workers is not None: opts.n_workers = args.n_workers
+    if args.need_eval is not None: opts.need_eval = args.need_eval
+    if args.ntest_depth is not None: opts.ntest_depth = args.ntest_depth
+    if args.p1_elo is not None: opts.p1_elo = args.p1_elo
+    if args.p1_model_config_path is not None: opts.p1_model_config_path = args.p1_model_config_path
+    if args.p1_model_weight_path is not None: opts.p1_model_weight_path = args.p1_model_weight_path
+    if args.p1_n_sims is not None: opts.p1_n_sims = args.p1_n_sims
+    if args.p1_name is not None: opts.p1_name = args.p1_name
+    if args.p2_elo is not None: opts.p2_elo = args.p2_elo
+    if args.p2_model_config_path is not None: opts.p2_model_config_path = args.p2_model_config_path
+    if args.p2_model_weight_path is not None: opts.p2_model_weight_path = args.p2_model_weight_path
+    if args.p2_n_sims is not None: opts.p2_n_sims = args.p2_n_sims
+    if args.p2_name is not None: opts.p2_name = args.p2_name
+    if args.pipes is not None: opts.pipe_pairs = load_pipe_pairs_names(args.pipes)
+    if args.render is not None: opts.render = args.render
+    if args.save_versus_dir is not None: opts.save_versus_dir = args.save_versus_dir
+    if args.total_step is not None: opts.start_total_steps = args.total_step
+
+    if args.gpu_mem_frac is not None:
+        try: opts.gpu_mem_frac = float(args.gpu_mem_frac)
+        except ValueError: pass
+    if args.p1_first is not None:
+        if args.p1_first in ('always', 'never'):
+            opts.p1_first = args.p1_first
+        else:
+            opts.p1_first = str2bool(args.p1_first)
+
+    return opts
+
+
+def setup(config: Config, setup_logger_flag):
+    if config.opts.n_steps_model >= 0:
+        model_dir = os.path.join(config.resource.generation_model_dir, config.resource.generation_model_dirname_tmpl % config.opts.n_steps_model)
         config.resource.model_config_path = os.path.join(model_dir, config.resource.model_config_filename)
         config.resource.model_weight_path = os.path.join(model_dir, config.resource.model_weight_filename)
 
-    if args.total_step is not None:
-        config.trainer.start_total_steps = args.total_step
+    if config.opts.start_total_steps is not None:
+        config.trainer.start_total_steps = config.opts.start_total_steps
 
-    if args.model_config_path is not None:
-        config.resource.model_config_path = args.model_config_path
-    if args.model_weight_path is not None:
-        config.resource.model_weight_path = args.model_weight_path
+    if config.opts.model_config_path is not None:
+        config.resource.model_config_path = config.opts.model_config_path
+    if config.opts.model_weight_path is not None:
+        config.resource.model_weight_path = config.opts.model_weight_path
     config.resource.create_directories()
 
     if setup_logger_flag:
         setup_logger(config.resource.main_log_path)
 
-    config.trainer.need_eval = args.need_eval
+    config.trainer.need_eval = config.opts.need_eval
 
-    if args.can_resign is not None:
-        config.play.can_resign = args.can_resign
-    if args.render is not None:
-        config.play.render = args.render
-    if args.n_sims is not None:
-        config.play.simulation_num_per_move = args.n_sims
+    if config.opts.can_resign is not None:
+        config.play.can_resign = config.opts.can_resign
+    if config.opts.render is not None:
+        config.play.render = config.opts.render
+    if config.opts.n_sims is not None:
+        config.play.simulation_num_per_move = config.opts.n_sims
 
-    if args.model_cache_size is not None:
-        config.model_cache.model_cache_size = args.model_cache_size
+    if config.opts.model_cache_size is not None:
+        config.model_cache.model_cache_size = config.opts.model_cache_size
 
 
 def start():
@@ -170,9 +184,11 @@ def start():
     parser = create_parser()
     args = parser.parse_args()
 
-    config = Config(args.env)
+    opts = args_to_opts(args)
+
+    config = Config(opts)
     setup_logger_flag = args.cmd != 'play_gui'
-    setup(config, args, setup_logger_flag=setup_logger_flag)
+    setup(config,setup_logger_flag=setup_logger_flag)
 
     if args.cmd == "self":
         from .worker import self_play as worker

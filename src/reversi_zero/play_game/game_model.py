@@ -51,12 +51,13 @@ class PlayWithHuman:
         self.next_color = None
 
     def start_http_server_process(self, pipe_pairs, port):
-        cmd = build_child_cmd(type='http_server', config=self.config, pipe_pairs=pipe_pairs)
-        cmd.extend([
-            '--http-port', f'{port}',
-            '--model-config-path', self.config.resource.model_config_path,
-            '--model-weight-path', self.config.resource.model_weight_path,
-        ])
+        import copy
+        opts = copy.copy(self.config.opts)
+        opts.http_port = port
+        opts.model_config_path = self.config.resource.model_config_path
+        opts.model_weight_path = self.config.resource.model_weight_path
+
+        cmd = build_child_cmd(type='http_server', opts=opts, pipe_pairs=pipe_pairs)
         return start_child_proc(cmd=cmd, nocuda=True)
 
     def add_observer(self, observer_func):

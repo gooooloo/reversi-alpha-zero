@@ -25,30 +25,20 @@ class SelfWorker:
             self.config.opts.gpu_mem_frac /= 2
 
     def start_model_cache_process(self, pipe_pairs):
-        cmd = build_child_cmd(type='model_cache', config=self.config, pipe_pairs=pipe_pairs)
-        cmd.extend([
-            '--model-cache-size', f'{self.config.model_cache.model_cache_size}'
-        ])
+        cmd = build_child_cmd(type='model_cache', opts=self.config.opts, pipe_pairs=pipe_pairs)
         return start_child_proc(cmd=cmd)
 
     def start_model_serving_process(self, pipe_pairs, model_serving_step_check=None):
-        cmd = build_child_cmd(type='model_serving', config=self.config, pipe_pairs=pipe_pairs)
-        cmd.extend([
-            '--model-config-path', self.config.resource.model_config_path,
-            '--model-weight-path', self.config.resource.model_weight_path,
-        ])
-        if self.config.opts.gpu_mem_frac is not None:
-            cmd.extend(['--gpu-mem-frac', f'{self.config.opts.gpu_mem_frac}'])
-        if model_serving_step_check is not None:
-            cmd.extend(['--model-serving-step-check', f'{model_serving_step_check}'])
+        import copy
+        opts = copy.copy(self.config.opts)
+        opts.model_config_path = self.config.resource.model_config_path
+        opts.model_weight_path = self.config.resource.model_weight_path
+        opts.model_serving_step_check = model_serving_step_check
+        cmd = build_child_cmd(type='model_serving', opts=opts, pipe_pairs=pipe_pairs)
         return start_child_proc(cmd=cmd)
 
     def start_a_self_play_process(self, pipe_pairs):
-        cmd = build_child_cmd(type='self_play_kernel', config=self.config, pipe_pairs=pipe_pairs)
-        cmd.extend([
-            '--can-resign', f'{self.config.play.can_resign}',
-            '--n-games', f'{9999999999}',
-        ])
+        cmd = build_child_cmd(type='self_play_kernel', opts=self.config.opts, pipe_pairs=pipe_pairs)
         return start_child_proc(cmd=cmd, nocuda=True)
 
     def fetch_model_step_info(self):

@@ -10,15 +10,24 @@ children_processes = []
 exit_tasks = []
 
 
-def build_child_cmd(type, config, pipe_pairs):
+def build_child_cmd(type, opts, pipe_pairs):
+
+    tmp_config_file_path = f'/tmp/reresi_alpha_zero/{config.env.env_class_name}/' \
+                           f'config_{time.time()}_{random.randint(100000, 999999)}.json'
+
+    def remove_tmp_config_file(*args):
+        import os
+        os.unlink(tmp_config_file_path)
+    add_exit_task(remove_tmp_config_file)
+
+    with open(tmp_config_file_path, 'wt') as f:
+        import json
+        json.dump(f, opts.__dict__)
+
     cmd = ['python3.6', '-m', 'src.reversi_zero.run', type,
-           '--env', f'{config.env.env_arg_name}',
-           '--n-sims', f'{config.play.simulation_num_per_move}',
            '--pipe', dump_pipe_pairs_names(pipe_pairs),
+           '--config-file', tmp_config_file_path
            ]
-    if config.opts.gpu_mem_frac is not None:
-        cmd.append('--gpu-mem-frac')
-        cmd.append(f'{config.opts.gpu_mem_frac}')
 
     return cmd
 

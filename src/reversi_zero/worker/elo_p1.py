@@ -66,19 +66,5 @@ class EloWorker(EloWorkerBase):
         assert self.config.opts.p1_model_weight_path
         assert self.config.opts.p2_model_config_path
         assert self.config.opts.p2_model_weight_path
-        cmd = build_child_cmd(type='versus_n_games', config=self.config, pipe_pairs=pipe_pairs)
-        cmd.extend([
-            '--n-games', f'{self.config.opts.n_games}',
-            '--n-workers', f'{self.config.opts.n_workers}',
-            "--p1-model-config-path", self.config.opts.p1_model_config_path,
-            "--p1-model-weight-path", self.config.opts.p1_model_weight_path,
-            "--p2-model-config-path", self.config.opts.p2_model_config_path,
-            "--p2-model-weight-path", self.config.opts.p2_model_weight_path,
-        ])
-        if self.config.opts.save_versus_dir:
-            cmd.extend(["--save-versus-dir", self.config.opts.save_versus_dir])
-        if self.config.opts.p1_first:
-            cmd.extend(['--p1-first', f'{self.config.opts.p1_first}'])
-        if self.config.opts.n_minutes:
-            cmd.extend(['--n-minutes', f'{self.config.opts.n_minutes}'])
+        cmd = build_child_cmd(type='versus_n_games', opts=self.config.opts, pipe_pairs=pipe_pairs)
         return cmd

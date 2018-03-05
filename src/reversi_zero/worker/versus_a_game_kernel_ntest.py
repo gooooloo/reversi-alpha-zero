@@ -16,14 +16,9 @@ class VersusNTestWorker(VersusPlayWorkerBase):
         super().__init__(*args, **kwargs)
 
     def start_p1_server(self, gtp_pipe_pair):
-        cmd = build_child_cmd(type='gtp_server', config=self.config, pipe_pairs=[gtp_pipe_pair, self.p1_pipe_pair])
-        if self.config.opts.n_minutes:
-            cmd.extend(['--n-minutes', f'{self.config.opts.n_minutes}'])
+        cmd = build_child_cmd(type='gtp_server', opts=self.config.opts, pipe_pairs=[gtp_pipe_pair, self.p1_pipe_pair])
         return start_child_proc(cmd=cmd, nocuda=True)
 
     def start_p2_server(self, gtp_pipe_pair):
-        cmd = build_child_cmd(type='gtp_server_ntest', config=self.config, pipe_pairs=[gtp_pipe_pair])
-        cmd.extend([
-            '--ntest-depth', f'{self.config.opts.ntest_depth}'
-        ])
+        cmd = build_child_cmd(type='gtp_server_ntest', opts=self.opts, pipe_pairs=[gtp_pipe_pair])
         return start_child_proc(cmd=cmd, nocuda=True)

@@ -25,22 +25,14 @@ class EloNTestWorker(EloWorkerBase):
         self.model_generation = self.extract_model_generation(config.resource.model_weight_path)
 
     def build_versus_n_games_cmd(self, pipe_pairs):
-        cmd = build_child_cmd(type='versus_n_games_ntest', config=self.config, pipe_pairs=pipe_pairs)
-        cmd.extend([
-            '--n-games', f'{self.config.opts.n_games}',
-            '--n-workers', f'{self.config.opts.n_workers}',
-            "--model-config-path", self.config.resource.model_config_path,
-            "--model-weight-path", self.config.resource.model_weight_path,
-            '--ntest-depth', f'{self.config.opts.ntest_depth}',
-            '--p1-name', self.get_p1_name(),
-            '--p2-name', self.get_p2_name(),
-        ])
-        if self.config.opts.save_versus_dir:
-            cmd.extend(["--save-versus-dir", self.config.opts.save_versus_dir])
-        if self.config.opts.p1_first:
-            cmd.extend(['--p1-first', f'{self.config.opts.p1_first}'])
-        if self.config.opts.n_minutes:
-            cmd.extend(['--n-minutes', f'{self.config.opts.n_minutes}'])
+        import copy
+        opts = copy.copy(self.config.opts)
+        opts.model_config_path = self.config.resource.model_config_path
+        opts.model_weight_path = self.config.resource.model_weight_path
+        opts.p1_name = self.get_p1_name()
+        opts.p2_name = self.get_p2_name()
+
+        cmd = build_child_cmd(type='versus_n_games_ntest', opts=opts, pipe_pairs=pipe_pairs)
         return cmd
 
     def get_p1_name(self):

@@ -64,15 +64,16 @@ class HTTPPlayServerWorker:
         http_server.start()
 
     def start_gtp_server_process(self, pipe_pairs):
-        cmd = build_child_cmd(type='gtp_server', config=self.config, pipe_pairs=pipe_pairs)
+        cmd = build_child_cmd(type='gtp_server', opts=self.config.opts, pipe_pairs=pipe_pairs)
         return start_child_proc(cmd=cmd, nocuda=True)
 
     def start_model_serving_process(self, model_config_path, model_weight_path, pipe_pairs):
-        cmd = build_child_cmd(type='model_serving', config=self.config, pipe_pairs=pipe_pairs)
-        cmd.extend([
-            '--model-config-path', model_config_path,
-            '--model-weight-path', model_weight_path,
-        ])
+        import copy
+        opts = copy.copy(self.config.opts)
+        opts.model_config_path = model_config_path
+        opts.model_weight_path = model_weight_path
+
+        cmd = build_child_cmd(type='model_serving', opts=opts, pipe_pairs=pipe_pairs)
         return start_child_proc(cmd=cmd)
 
 

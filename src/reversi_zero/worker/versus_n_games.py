@@ -34,11 +34,11 @@ class VersusWorkerBase:
         self.win_n, self.draw_n, self.lose_n = 0, 0, 0
 
     def start_model_serving_process(self, model_config_path, model_weight_path, pipe_pairs):
-        cmd = build_child_cmd(type='model_serving', config=self.config, pipe_pairs=pipe_pairs)
-        cmd.extend([
-            '--model-config-path', model_config_path,
-            '--model-weight-path', model_weight_path,
-        ])
+        import copy
+        opts = copy.copy(self.config.opts)
+        opts.model_config_path = model_config_path
+        opts.model_weight_path = model_weight_path
+        cmd = build_child_cmd(type='model_serving', opts=opts, pipe_pairs=pipe_pairs)
         return start_child_proc(cmd=cmd)
 
     def start_1_game_process(self, pps, p1_first):
@@ -132,12 +132,10 @@ class VersusWorker(VersusWorkerBase):
             self.config.opts.gpu_mem_frac /= 2
 
     def start_1_game_process(self, pps, p1_first):
-        cmd = build_child_cmd(type='versus_a_game_kernel', config=self.config, pipe_pairs=pps)
-        cmd.extend(['--p1-first', f'{p1_first}'])
-        if self.config.opts.save_versus_dir:
-            cmd.extend(["--save-versus-dir", self.config.opts.save_versus_dir])
-        if self.config.opts.n_minutes:
-            cmd.extend(['--n-minutes', f'{self.config.opts.n_minutes}'])
+        import copy
+        opts = copy.copy(self.config.opts)
+        opts.p1_first = p1_first
+        cmd = build_child_cmd(type='versus_a_game_kernel', opts=opts, pipe_pairs=pps)
 
         return start_child_proc(cmd=cmd, nocuda=True)
 

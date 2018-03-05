@@ -64,17 +64,16 @@ class EvaluateWorker:
 
         pipe_pairs = self.pipe_files.make_pipes(1)
 
-        cmd = build_child_cmd(type='elo_p1', config=self.config, pipe_pairs=reverse_in_out(pipe_pairs))
-        cmd.extend([
-            '--n-games', f'{self.config.eval.n_games}',
-            '--n-workers', f'{self.config.opts.n_workers}',
-            "--p1-model-config-path", to_eval_config_path,
-            "--p1-model-weight-path", to_eval_weight_path,
-            "--p2-model-config-path", rc.model_config_path,
-            "--p2-model-weight-path", rc.model_weight_path,
-            '--p1-elo', '0',
-            '--p2-elo', '0',
-        ])
+        import copy
+        opts = copy.copy(self.config.opts)
+        opts.p1_model_config_path = to_eval_config_path
+        opts.p1_model_weight_path = to_eval_weight_path
+        opts.p2_model_config_path = rc.model_config_path
+        opts.p2_model_weight_path = rc.model_weight_path
+        opts.p1_elo = 0
+        opts.p2_elo = 0
+
+        cmd = build_child_cmd(type='elo_p1', opts=opts, pipe_pairs=reverse_in_out(pipe_pairs))
         pipe_pairs[0].open_read_nonblock()
         start_child_proc(cmd=cmd).wait()
 

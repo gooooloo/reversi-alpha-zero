@@ -169,17 +169,16 @@ class LeagueWorker:
     def vs(self, player1 : Player, player2 : Player, n_games):
 
         pipe_pairs = self.pipe_files.make_pipes(1)
-        cmd = build_child_cmd(type='versus_n_games', config=self.config, pipe_pairs=reverse_in_out(pipe_pairs))
-        cmd.extend([
-            '--n-games', f'{n_games}',
-            '--n-workers', f'{self.config.opts.n_workers}',
-            '--p1-n-sims', f'{player1.n_sims}',
-            "--p1-model-config-path", player1.config,
-            "--p1-model-weight-path", player1.weight,
-            '--p2-n-sims', f'{player2.n_sims}',
-            "--p2-model-config-path", player2.config,
-            "--p2-model-weight-path", player2.weight,
-        ])
+        import copy
+        opts = copy.copy(self.config.opts)
+        opts.n_games = n_games
+        opts.p1_n_sims = player1.n_sims
+        opts.p1_model_config_path = player1.config
+        opts.p1_model_weight_path = player1.weight
+        opts.p2_n_sims = player2.n_sims
+        opts.p2_model_config_path = player2.config
+        opts.p2_model_weight_path = player2.weight
+        cmd = build_child_cmd(type='versus_n_games', opts=opts, pipe_pairs=reverse_in_out(pipe_pairs))
 
         pipe_pairs[0].open_read_nonblock()
         p = start_child_proc(cmd=cmd).wait()
