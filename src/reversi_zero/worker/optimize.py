@@ -12,9 +12,8 @@ from keras.optimizers import SGD
 from src.reversi_zero.agent.model import ReversiModel, objective_function_for_policy, objective_function_for_value
 from src.reversi_zero.config import Config
 from src.reversi_zero.lib import tf_util
-from src.reversi_zero.lib.data_helper import get_game_data_filenames, read_game_data_from_file, \
+from src.reversi_zero.lib.data_helper import get_game_data_filenames, read_data_from_file, \
     save_unloaded_data_count, load_unloaded_data_count
-from src.reversi_zero.lib.model_helpler import load_model_weight, save_model_weight
 
 logger = getLogger(__name__)
 logger.setLevel(INFO)
@@ -96,7 +95,7 @@ class OptimizeWorker:
                 if self.config.trainer.need_eval:
                     self.save_current_model_as_to_eval()
                 else:
-                    self.save_current_model()
+                    self.save_current_model(self.total_steps)
 
                 last_save_step = self.total_steps
 
@@ -156,8 +155,9 @@ class OptimizeWorker:
         K.set_value(self.optimizer.lr, lr)
         logger.info(f"total step={self.total_steps}, set learning rate to {lr}")
 
-    def save_current_model(self):
-        save_model_weight(self.model, self.total_steps)
+    def save_current_model(self, steps):
+        cr = self.model.config.resource
+        self.model.save(cr.model_config_path, cr.model_weight_path, steps)
 
     def save_current_model_as_to_eval(self):
         rc = self.config.resource
@@ -186,9 +186,12 @@ class OptimizeWorker:
         model = ReversiModel(self.config)
 
         logger.info(f"loading model")
-        steps = load_model_weight(model)
+        cr = self.config.resource
+        steps = model.load(cr.model_config_path, cr.model_weight_path)
         if steps is None:
-            raise RuntimeError(f"Model can not loaded!")
+            model.build()
+            steps = 0
+            model.save(cr.model_config_path, cr.model_weight_path, steps)
         return model, steps
 
     def load_play_data(self):
@@ -213,7 +216,7 @@ class OptimizeWorker:
     def load_data_from_file(self, filename):
         try:
             logger.debug(f"loading data from {filename}")
-            data = read_game_data_from_file(filename)
+            data = read_data_from_file(filename)
             self.loaded_data[filename] = data
             self.loaded_filenames.add(filename)
         except Exception as e:

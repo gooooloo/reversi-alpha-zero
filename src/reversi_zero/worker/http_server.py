@@ -17,15 +17,11 @@ def start(config: Config):
         config.resource.model_config_path = os.path.join(model_dir, config.resource.model_config_filename)
         config.resource.model_weight_path = os.path.join(model_dir, config.resource.model_weight_filename)
 
-    http_server_type = config.opts.cmd
-    if http_server_type == 'http_server':
+    cmd = config.opts.cmd
+    if cmd == 'http_server':
         return HTTPPlayServerWorker(config).start()
-    elif http_server_type == 'fs_model':
+    elif cmd == 'http_fs':
         return HTTPModelFileServerWorker(config).start()
-    elif http_server_type == 'fs_play_data':
-        return HTTPPlayDataFileServerWorker(config).start()
-    elif http_server_type == 'fs_resign':
-        return HTTPResFileServerWorker(config).start()
     else:
         raise Exception("error")
 
@@ -83,9 +79,8 @@ class HTTPModelFileServerWorker:
         self.config = config
 
     def start(self):
-        folder = '/tmp/'  # TODO
         port = self.config.opts.http_port
-        http_server = HttpFileServer(folder=folder, port=port)
+        http_server = HttpFileServer(config=self.config, port=port)
         http_server.start()
 
 

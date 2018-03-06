@@ -43,19 +43,18 @@ class ReversiModelAPIServer:
 
     def _load_model(self):
         from src.reversi_zero.agent.model import ReversiModel
-        from src.reversi_zero.lib.model_helpler import load_model_weight, save_model_weight
+        from src.reversi_zero.lib.model_helpler import load_remote_model_weight
         self.agent_model = ReversiModel(self.config)
-        steps = load_model_weight(self.agent_model)
+        steps = load_remote_model_weight(self.agent_model)
 
         target_steps = self.config.opts.model_serving_step_check
         while target_steps is not None and steps != target_steps:
             print(f'model loading, exp step {target_steps}, act step {steps}')
             self.agent_model = ReversiModel(self.config)
-            steps = load_model_weight(self.agent_model)
+            steps = load_remote_model_weight(self.agent_model)
 
         if steps is None:
-            self.agent_model.build()
-            save_model_weight(self.agent_model, 0)
+            raise Exception('no model!')
 
     def predict(self, x):
         assert x.ndim == 4, f'{x.ndim}'

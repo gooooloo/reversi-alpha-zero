@@ -10,7 +10,7 @@ logger.setLevel(INFO)
 getLogger('requests.packages.urllib3.connectionpool').setLevel(WARNING)
 
 
-def load_model_weight(model):
+def load_remote_model_weight(model):
     retry_count_max = 10000
     retry_count = 0
     while retry_count < retry_count_max:
@@ -19,7 +19,7 @@ def load_model_weight(model):
         except Exception as e:
             logger.debug(e)
             logger.info("will retry")
-            # for whatever reason(e.g., network error, fds file synchronization error), we sleep and retry.
+            # for whatever reason(e.g., network error), we sleep and retry.
             time.sleep(0.1)
             retry_count += 1
 
@@ -33,61 +33,46 @@ def load_model_weight_internal(model):
     :return:
     """
     cr = model.config.resource
-    if cr.use_remote_model:
+    url_weight = os.path.join(cr.remote_http_server, cr.remote_model_weight_path)
+    url_config = os.path.join(cr.remote_http_server, cr.remote_model_config_path)
 
-        config_file = tempfile.NamedTemporaryFile(delete=False)
-        response = requests.get(cr.remote_model_config_path)
-        config_file.write(response.content)
-        config_file.close()
+    config_file = tempfile.NamedTemporaryFile(delete=False)
+    response = requests.get(url_config)
+    config_file.write(response.content)
+    config_file.close()
 
-        weight_file = tempfile.NamedTemporaryFile(delete=False)
-        response = requests.get(cr.remote_model_weight_path)
-        weight_file.write(response.content)
-        weight_file.close()
+    weight_file = tempfile.NamedTemporaryFile(delete=False)
+    response = requests.get(url_weight)
+    weight_file.write(response.content)
+    weight_file.close()
 
-        logger.debug(f"using remote model from {cr.remote_model_weight_path}")
-        loaded = model.load(config_file.name, weight_file.name)
+    logger.debug(f"using remote model from {url_weight}")
+    loaded = model.load(config_file.name, weight_file.name)
 
-        os.unlink(config_file.name)
-        os.unlink(weight_file.name)
+    os.unlink(config_file.name)
+    os.unlink(weight_file.name)
 
-        return loaded
-
-    else:
-        return model.load(cr.model_config_path, cr.model_weight_path)
+    return loaded
 
 
-def save_model_weight(model, steps):
+def fetch_remote_model_step_info(config):
     """
 
     :param reversi_zero.agent.model.ReversiModel model:
     :return:
     """
-    cr = model.config.resource
-    if cr.use_remote_model:
-        raise Exception("not supported yet!")  # this should be a upload
-    return model.save(model.config.resource.model_config_path, model.config.resource.model_weight_path, steps)
 
-
-def fetch_model_step_info(config):
-    """
-
-    :param reversi_zero.agent.model.ReversiModel model:
-    :return:
-    """
     from reversi_zero.agent.model import ReversiModel
     cr = config.resource
-    if cr.use_remote_model:
-        config_file = tempfile.NamedTemporaryFile(delete=False)
-        response = requests.get(cr.remote_model_config_path)
-        config_file.write(response.content)
-        config_file.close()
+    url_config = os.path.join(cr.remote_http_server, cr.remote_model_config_path)
+    config_file = tempfile.NamedTemporaryFile(delete=False)
+    response = requests.get(url_config)
+    config_file.write(response.content)
+    config_file.close()
 
-        digest = ReversiModel.load_step_info(config_file.name)
+    digest = ReversiModel.load_step_info(config_file.name)
 
-        os.unlink(config_file.name)
-    else:
-        digest = ReversiModel.load_step_info(cr.model_config_path)
+    os.unlink(config_file.name)
 
     return digest
 

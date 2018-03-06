@@ -25,22 +25,20 @@ def get_generation_model_dirs(rc: ResourceConfig):
     return dirs
 
 
-def write_game_data_to_file(path, data):
-    with open(path, "wt") as f:
-        json.dump(data, f)
+def upload_play_data(config, buffer):
+    import requests, os
+
+    requests.post(url=os.path.join(config.resource.remote_http_server, config.resource.remote_play_data_path),
+                  data=buffer,
+                  headers={'Content-Type': 'application/octet-stream'})
 
 
-def read_game_data_from_file(path):
-    with open(path, "rt") as f:
-        return json.load(f)
-
-
-def save_play_data(config, buffer):
-    rc = config.resource
+def save_play_data(rc, buffer):
     game_id = datetime.now().strftime("%Y%m%d-%H%M%S.%f")
     path = os.path.join(rc.play_data_dir, rc.play_data_filename_tmpl % game_id)
     logger.info(f"save play data to {path}")
-    write_game_data_to_file(path, buffer)
+    with open(path, "wt") as f:
+        json.dump(buffer, f)
 
 
 def remove_old_play_data(config):
@@ -60,13 +58,15 @@ KEY_UNLOADED_DATA_COUNT = 'unloaded_data_count'
 
 def save_unloaded_data_count(rc: ResourceConfig, count):
     fn = get_game_data_statistics_filename(rc)
-    write_game_data_to_file(fn, {KEY_UNLOADED_DATA_COUNT: count})
+    with open(fn, "wt") as f:
+        json.dump({KEY_UNLOADED_DATA_COUNT: count}, f)
 
 
 def load_unloaded_data_count(rc: ResourceConfig):
     fn = get_game_data_statistics_filename(rc)
     try:
-        d = read_game_data_from_file(fn)
+        with open(fn, "rt") as f:
+            d = json.load(f)
         if d and KEY_UNLOADED_DATA_COUNT in d:
             return int(d[KEY_UNLOADED_DATA_COUNT])
         else:

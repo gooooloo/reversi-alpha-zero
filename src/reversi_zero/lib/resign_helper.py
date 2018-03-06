@@ -22,33 +22,14 @@ class ResignCtrl:
         return self
 
 
-def load_resign_v(config):
-    if config.resource.use_remote_model:
-        v, _ = _load_resign_remote(config)
-    else:
-        v, _ = _load_resign_local(config)
-
-    return v
-
-
-def _load_resign_local(config):
-    try:
-        p = config.resource.resign_log_path
-        return _load_resign(p)
-    except Exception as e:
-        logger.debug(e)
-
-    return None, None
-
-
-def _load_resign_remote(config):
+def load_remote_resign_v(config):
     p = None
     try:
         p = tempfile.NamedTemporaryFile(delete=False)
-        response = requests.get(config.resource.remote_resign_log_path)
+        response = requests.get(os.path.join(config.resource.remote_http_server, config.resource.remote_resign_log_path))
         p.write(response.content)
         p.close()
-        return _load_resign(p.name)
+        return _load_resign(p.name)[0]
 
     except Exception as e:
         logger.debug(e)
@@ -56,47 +37,31 @@ def _load_resign_remote(config):
         if p:
             os.unlink(p.name)
 
-    return None, None
+    return None
 
 
-# just save in file as a report, another process would handle it
-def report_resign_ctrl(config, ctrl):
-    t = datetime.now().strftime("%Y%m%d-%H%M%S.%f")
-    p = os.path.join(config.resource.resign_log_dir, config.resource.resign_delta_path_tmpl % t)
-    _save_resign(v=None, ctrl=ctrl, p=p)
+def report_resign_ctrl_delta(config, ctrl):
+    import os, requests
+
+    requests.post(url=os.path.join(config.resource.remote_http_server, config.resource.remote_resign_log_path),
+                  data={'n': ctrl.n, 'fpn': ctrl.f_p_n},
+                  headers={'content-type': 'application/json'})
 
 
-def keep_updating_resign_ctrl(config):
-    v, ctrl = _load_resign_local(config)
+def handle_resign_ctrl_delta(config, delta):
+    try:
+        v, ctrl = _load_resign(config.resource.resign_log_path)
+    except Exception as e:
+        logger.debug(e)
+        v, ctrl = None, None
+
     ctrl = ctrl or ResignCtrl()
     v = v if v is not None else config.play.v_resign_init
 
-    while True:
-        fns = _get_resign_delta_filenames(config)
-        for fn in fns:
-            try:
-                _, delta = _load_resign(fn)
-            except Exception as e:
-                logger.debug(e)
-                dalta = None
-
-            if not delta:
-                continue
-            ctrl += delta
-            v = _new_v(config=config, v=v, ctrl=ctrl)
-            p = os.path.join(config.resource.resign_log_dir, config.resource.resign_log_path)
-            _save_resign(p=p, v=v, ctrl=ctrl)
-            os.remove(fn)
-
-        sleep_seconds = 10
-        logger.info(f'resign_v updated to {v}. sleeping {sleep_seconds} seconds...')
-        sleep(sleep_seconds)
-
-
-def _get_resign_delta_filenames(config):
-    pattern = os.path.join(config.resource.resign_log_dir, config.resource.resign_delta_path_tmpl % "*")
-    files = list(sorted(glob(pattern)))
-    return files
+    ctrl += delta
+    v = _new_v(config=config, v=v, ctrl=ctrl)
+    p = os.path.join(config.resource.resign_log_dir, config.resource.resign_log_path)
+    _save_resign(p=p, v=v, ctrl=ctrl)
 
 
 def _new_v(config, v, ctrl):

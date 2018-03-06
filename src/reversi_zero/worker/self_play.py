@@ -5,7 +5,7 @@ from src.reversi_zero.agent.api import MODEL_SERVING_READY, MODEL_SERVING_START,
     MODEL_SERVING_STARTED, MODEL_SERVING_STOPPED
 from src.reversi_zero.agent.model_cache import MODEL_CACHE_READY, RESET_CACHE_START, RESET_CACHE_END
 from src.reversi_zero.config import Config
-from src.reversi_zero.lib.model_helpler import fetch_model_step_info
+from src.reversi_zero.lib.model_helpler import fetch_remote_model_step_info
 from src.reversi_zero.lib.pipe_helper import PipeFilesManager, reverse_in_out
 from src.reversi_zero.lib.proc_helper import build_child_cmd, start_child_proc
 
@@ -41,10 +41,10 @@ class SelfWorker:
         cmd = build_child_cmd(type='self_play_kernel', opts=self.config.opts, pipe_pairs=pipe_pairs)
         return start_child_proc(cmd=cmd, nocuda=True)
 
-    def fetch_model_step_info(self):
+    def fetch_remote_model_step_info(self):
         step_info = None
         while step_info is None:
-            step_info = fetch_model_step_info(self.config)
+            step_info = fetch_remote_model_step_info(self.config)
         return step_info
 
     def start(self):
@@ -86,11 +86,11 @@ class SelfWorker:
             for pp0 in model_serving_pps:
                 self.start_a_self_play_process([pp0])
 
-        model_step = self.fetch_model_step_info()
+        model_step = self.fetch_remote_model_step_info()
         assert model_step is not None
 
         while True:
-            now_model_step = self.fetch_model_step_info()
+            now_model_step = self.fetch_remote_model_step_info()
             logger.info(f'old model step: {model_step}')
             logger.info(f'now model step: {now_model_step}')
             if now_model_step <= model_step:

@@ -82,21 +82,19 @@ class Options:
 
 class ResourceConfig:
     def __init__(self, env):
-        self.project_dir = os.environ.get("PROJECT_DIR", _project_dir())
-        self.data_dir = os.environ.get("DATA_DIR", _data_dir(env))
-        self.model_dir = os.environ.get("MODEL_DIR", os.path.join(self.data_dir, "model"))
+        self.project_dir = _project_dir()
+        self.data_dir = _data_dir(env)
+        self.model_dir = os.path.join(self.data_dir, "model")
         self.model_config_filename = "model_config.json"
         self.model_weight_filename = "model_weight.h5"
         self.model_config_path = os.path.join(self.model_dir, self.model_config_filename)
         self.model_weight_path = os.path.join(self.model_dir, self.model_weight_filename)
 
-        self.use_remote_model = os.environ.get("USE_REMOTE_MODEL")
-        self.remote_model_config_path = os.environ.get("MODEL_CONFIG_URL")
-        self.remote_model_weight_path = os.environ.get("MODEL_WEIGHT_URL")
-        if self.use_remote_model and not self.remote_model_config_path:
-            raise Exception("USE_REMOTE_MODEL is True but MODEL_CONFIG_URL is not set!")
-        if self.use_remote_model and not self.remote_model_weight_path:
-            raise Exception("USE_REMOTE_MODEL is True but MODEL_WEIGHT_URL is not set!")
+        self.remote_http_server = None
+        self.remote_play_data_path = "play_data"
+        self.remote_model_config_path = "model_config"
+        self.remote_model_weight_path = "model_weight"
+        self.remote_resign_path = "resign"
 
         self.generation_model_dir = os.path.join(self.model_dir, "generation_models")
         self.generation_model_dirname_tmpl = "model_%s-steps"
@@ -113,8 +111,6 @@ class ResourceConfig:
         self.main_log_path = os.path.join(self.log_dir, "main.log")
         self.resign_log_dir = self.log_dir
         self.resign_log_path = os.path.join(self.resign_log_dir, "resign.log")
-        self.resign_delta_path_tmpl = "resign_delta_%s.log"
-        self.remote_resign_log_path = os.environ.get("RESIGN_CTRL_URL")
 
     def create_directories(self):
         dirs = [self.project_dir, self.data_dir, self.model_dir, self.play_data_dir, self.log_dir,

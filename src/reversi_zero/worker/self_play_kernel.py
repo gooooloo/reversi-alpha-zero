@@ -8,8 +8,8 @@ from src.reversi_zero.agent.api import ReversiModelAPIProxy
 from src.reversi_zero.agent.model_cache import ModelCacheClient
 from src.reversi_zero.agent.player import SelfPlayer
 from src.reversi_zero.config import Config
-from src.reversi_zero.lib.data_helper import remove_old_play_data, save_play_data
-from src.reversi_zero.lib.resign_helper import load_resign_v, ResignCtrl, report_resign_ctrl
+from src.reversi_zero.lib.data_helper import upload_play_data
+from src.reversi_zero.lib.resign_helper import load_remote_resign_v, ResignCtrl, report_resign_ctrl_delta
 
 logger = getLogger(__name__)
 
@@ -38,7 +38,7 @@ class SelfPlayWorker:
         game_idx = 1
 
         resign_ctrl = ResignCtrl()
-        loaded_v = load_resign_v(self.config)
+        loaded_v = load_remote_resign_v(self.config)
         resign_v = self.config.play.v_resign_init if loaded_v is None else loaded_v
 
         logger.debug("game is on!!!")
@@ -55,13 +55,12 @@ class SelfPlayWorker:
             logger.debug(f"play game {game_idx} time={end_time - start_time} sec")
 
             if (game_idx % self.config.play_data.nb_game_in_file) == 0:
-                save_play_data(self.config, buffer)
+                upload_play_data(self.config, buffer)
                 buffer = []
-                remove_old_play_data(self.config)
 
-                report_resign_ctrl(self.config, resign_ctrl)
+                report_resign_ctrl_delta(self.config, resign_ctrl)
                 resign_ctrl = ResignCtrl()
-                loaded_v = load_resign_v(self.config)
+                loaded_v = load_remote_resign_v(self.config)
                 resign_v = resign_v if loaded_v is None else loaded_v
 
             game_idx += 1
