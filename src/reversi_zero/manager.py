@@ -14,9 +14,7 @@ CMD_LIST = [
     'opt',  # training model, GPU required.
     'self', # self play, GPU required.
     'eval', # Evaluator, only for AlphaGoZero way. GPU required.
-    'fs_model',  # File server of model. No GPU usage.
-    'fs_resign', # File server of resign management. No GPU usage.
-    'fs_play_data', # File server of play data. No GPU usage.
+    'fs',  # File server. CPU only.
 
     # play
     'elo_p1',
