@@ -19,26 +19,17 @@ def get_game_data_statistics_filename(rc: ResourceConfig):
     return os.path.join(rc.play_data_dir, rc.play_data_statistics_filename)
 
 
-def get_generation_model_dirs(rc: ResourceConfig):
-    dir_pattern = os.path.join(rc.generation_model_dir, rc.generation_model_dirname_tmpl % "*")
-    dirs = list(sorted(glob(dir_pattern)))
-    return dirs
+def read_game_data_from_file(path):
+    with open(path, "rt") as f:
+        return json.load(f)
 
 
-def upload_play_data(config, buffer):
-    import requests, os
-
-    requests.post(url=os.path.join(config.resource.remote_http_server, config.resource.remote_play_data_path),
-                  data=buffer,
-                  headers={'Content-Type': 'application/octet-stream'})
-
-
-def save_play_data(rc, buffer):
+def save_play_data(rc, moves):
     game_id = datetime.now().strftime("%Y%m%d-%H%M%S.%f")
     path = os.path.join(rc.play_data_dir, rc.play_data_filename_tmpl % game_id)
     logger.info(f"save play data to {path}")
     with open(path, "wt") as f:
-        json.dump(buffer, f)
+        json.dump(moves, f)
 
 
 def remove_old_play_data(config):

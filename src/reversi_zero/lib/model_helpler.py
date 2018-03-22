@@ -1,21 +1,22 @@
 import operator
-from logging import getLogger, WARNING, INFO
-import requests
+from logging import getLogger, INFO
 import tempfile
 import os
 import time
 
+from src.reversi_zero.agent.model import ReversiModel
+from src.reversi_zero.lib.grpc_helper import FileClient
+
 logger = getLogger(__name__)
 logger.setLevel(INFO)
-getLogger('requests.packages.urllib3.connectionpool').setLevel(WARNING)
 
 
-def load_remote_model_weight(model):
+def load_remote_model_weight(model, file_client:FileClient):
     retry_count_max = 10000
     retry_count = 0
     while retry_count < retry_count_max:
         try:
-            return load_model_weight_internal(model)
+            return load_model_weight_internal(model, file_client)
         except Exception as e:
             logger.debug(e)
             logger.info("will retry")
@@ -26,27 +27,16 @@ def load_remote_model_weight(model):
     raise Exception(f"Failed to load model after {retry_count_max} tries!")
 
 
-def load_model_weight_internal(model):
-    """
-
-    :param reversi_zero.agent.model.ReversiModel model:
-    :return:
-    """
-    cr = model.config.resource
-    url_weight = os.path.join(cr.remote_http_server, cr.remote_model_weight_path)
-    url_config = os.path.join(cr.remote_http_server, cr.remote_model_config_path)
+def load_model_weight_internal(model, file_client:FileClient):
 
     config_file = tempfile.NamedTemporaryFile(delete=False)
-    response = requests.get(url_config)
-    config_file.write(response.content)
     config_file.close()
+    file_client.download_model_config(config_file.name)
 
     weight_file = tempfile.NamedTemporaryFile(delete=False)
-    response = requests.get(url_weight)
-    weight_file.write(response.content)
     weight_file.close()
+    file_client.download_model_weight(weight_file.name)
 
-    logger.debug(f"using remote model from {url_weight}")
     loaded = model.load(config_file.name, weight_file.name)
 
     os.unlink(config_file.name)
@@ -55,21 +45,12 @@ def load_model_weight_internal(model):
     return loaded
 
 
-def fetch_remote_model_step_info(config):
-    """
+def fetch_remote_model_step_info(file_client:FileClient):
 
-    :param reversi_zero.agent.model.ReversiModel model:
-    :return:
-    """
-
-    from reversi_zero.agent.model import ReversiModel
-    cr = config.resource
-    url_config = os.path.join(cr.remote_http_server, cr.remote_model_config_path)
     config_file = tempfile.NamedTemporaryFile(delete=False)
-    response = requests.get(url_config)
-    config_file.write(response.content)
     config_file.close()
 
+    file_client.download_model_config(config_file.name)
     digest = ReversiModel.load_step_info(config_file.name)
 
     os.unlink(config_file.name)

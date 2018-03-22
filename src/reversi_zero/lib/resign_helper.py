@@ -1,11 +1,14 @@
 from glob import glob
 from datetime import datetime
 from logging import getLogger, WARNING
+from random import random
 from time import sleep
 import tempfile
 import requests
 import os
 import json
+
+from src.reversi_zero.lib.grpc_helper import FileClient
 
 logger = getLogger(__name__)
 getLogger('requests.packages.urllib3.connectionpool').setLevel(WARNING)
@@ -22,30 +25,17 @@ class ResignCtrl:
         return self
 
 
-def load_remote_resign_v(config):
-    p = None
-    try:
-        p = tempfile.NamedTemporaryFile(delete=False)
-        response = requests.get(os.path.join(config.resource.remote_http_server, config.resource.remote_resign_log_path))
-        p.write(response.content)
-        p.close()
-        return _load_resign(p.name)[0]
+def compute_resign_v(config):
 
-    except Exception as e:
-        logger.debug(e)
-    finally:
-        if p:
-            os.unlink(p.name)
+    prop = config.play.v_resign_disable_prop
+    enabled = config.play.can_resign and random() >= prop
+    if enabled:
+        loaded_v, _ = _load_resign(config.resource.resign_log_path)
+        resign_v = config.play.v_resign_init if loaded_v is None else loaded_v
+    else:
+        resign_v = -99999999
 
-    return None
-
-
-def report_resign_ctrl_delta(config, ctrl):
-    import os, requests
-
-    requests.post(url=os.path.join(config.resource.remote_http_server, config.resource.remote_resign_log_path),
-                  data={'n': ctrl.n, 'fpn': ctrl.f_p_n},
-                  headers={'content-type': 'application/json'})
+    return enabled, resign_v
 
 
 def handle_resign_ctrl_delta(config, delta):

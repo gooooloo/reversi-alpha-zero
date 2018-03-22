@@ -1,5 +1,6 @@
 import numpy as np
 from src.reversi_zero.config import Config
+from src.reversi_zero.lib.grpc_helper import FileClient
 from src.reversi_zero.lib.pipe_helper import PipePair
 
 BUFFER_DTYPE = np.float32
@@ -37,6 +38,7 @@ class ReversiModelAPIServer:
 
         self.parent_pipe_pair = parent_pipe_pair
         self.data_pipe_pairs = data_pipe_pairs
+        self.file_client = FileClient(config)
 
     def start(self):
         self.predict_batch_worker()
@@ -45,13 +47,13 @@ class ReversiModelAPIServer:
         from src.reversi_zero.agent.model import ReversiModel
         from src.reversi_zero.lib.model_helpler import load_remote_model_weight
         self.agent_model = ReversiModel(self.config)
-        steps = load_remote_model_weight(self.agent_model)
+        steps = load_remote_model_weight(self.agent_model, self.file_client)
 
         target_steps = self.config.opts.model_serving_step_check
         while target_steps is not None and steps != target_steps:
             print(f'model loading, exp step {target_steps}, act step {steps}')
             self.agent_model = ReversiModel(self.config)
-            steps = load_remote_model_weight(self.agent_model)
+            steps = load_remote_model_weight(self.agent_model, self.file_client)
 
         if steps is None:
             raise Exception('no model!')

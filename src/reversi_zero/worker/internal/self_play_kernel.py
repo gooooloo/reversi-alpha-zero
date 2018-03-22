@@ -1,15 +1,16 @@
 import importlib
 from logging import getLogger
-from random import random
 from time import time
+
 import numpy as np
 
 from src.reversi_zero.agent.api import ReversiModelAPIProxy
 from src.reversi_zero.agent.model_cache import ModelCacheClient
 from src.reversi_zero.agent.player import SelfPlayer
 from src.reversi_zero.config import Config
-from src.reversi_zero.lib.data_helper import upload_play_data
-from src.reversi_zero.lib.resign_helper import load_remote_resign_v, ResignCtrl, report_resign_ctrl_delta
+from src.reversi_zero.lib import chunk_pb2
+from src.reversi_zero.lib.grpc_helper import FileClient
+from src.reversi_zero.lib.resign_helper import ResignCtrl
 
 logger = getLogger(__name__)
 
@@ -34,34 +35,26 @@ class SelfPlayWorker:
 
     def start(self):
 
-        buffer = []
         game_idx = 1
 
-        resign_ctrl = ResignCtrl()
-        loaded_v = load_remote_resign_v(self.config)
-        resign_v = self.config.play.v_resign_init if loaded_v is None else loaded_v
+        file_client = FileClient(self.config)
 
         logger.debug("game is on!!!")
         while True:
             start_time = time()
 
-            prop = self.config.play.v_resign_disable_prop
-            should_resign = random() >= prop if self.config.play.can_resign else False
-            moves, resign_ctrl_tmp = self.play_a_game(should_resign, resign_v)
-            buffer += moves
-            resign_ctrl += resign_ctrl_tmp
+            thres = file_client.ask_resign_threshold()
+            should_resign, resign_v = thres.enabled, thres.v
+
+            moves, resign_ctrl = self.play_a_game(should_resign, resign_v)
 
             end_time = time()
             logger.debug(f"play game {game_idx} time={end_time - start_time} sec")
 
-            if (game_idx % self.config.play_data.nb_game_in_file) == 0:
-                upload_play_data(self.config, buffer)
-                buffer = []
+            file_client.upload_play_data(moves)
 
-                report_resign_ctrl_delta(self.config, resign_ctrl)
-                resign_ctrl = ResignCtrl()
-                loaded_v = load_remote_resign_v(self.config)
-                resign_v = resign_v if loaded_v is None else loaded_v
+            if resign_ctrl.n > 0:
+                file_client.report_resign_ctrl(resign_ctrl)
 
             game_idx += 1
             if game_idx > self.config.opts.n_games:
@@ -93,13 +86,10 @@ class SelfPlayWorker:
                 if resign_predicted_winner is None:
                     resign_predicted_winner = env.last_player
 
-            moves += [[env.compress_ob(env.observation).tolist(), np.asarray(pi).tolist()]]
+            moves.append(chunk_pb2.Move(cob=env.compress_ob(env.observation).tobytes(), pi=np.asarray(pi).tobytes(), z=0))
 
             env.step(act)
             player.play(act)
-
-            if self.config.play.render:
-                env.render()
 
         if env.black_wins:
             z = 1
@@ -108,13 +98,13 @@ class SelfPlayWorker:
         else:
             z = 0
         for i, move in enumerate(moves):
-            move += [z if i%2==0 else -z]
+            move.z = z
 
         if resign_predicted_winner is not None:
             f_p_n = 0 if resign_predicted_winner == env.winner else 1
             resign_ctrl = ResignCtrl(1, f_p_n)
         else:
-            resign_ctrl = ResignCtrl()
+            resign_ctrl = ResignCtrl(0, 0)
 
         return moves, resign_ctrl
 

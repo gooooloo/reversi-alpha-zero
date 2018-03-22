@@ -1,0 +1,33 @@
+
+syntax = "proto3";
+
+service FileServer {
+  rpc upload_play_data(stream Move) returns (Empty) {}
+  rpc download_model_config(Empty) returns (stream Chunk) {}
+  rpc download_model_weight(Empty) returns (stream Chunk) {}
+  rpc report_resign_ctrl(ResignCtrl) returns (Empty) {}
+  rpc ask_resign_threshold(Empty) returns (ResignThreshold) {}
+}
+
+message Chunk {
+  bytes buffer = 1;
+}
+
+message Move {
+  bytes cob = 1;
+  bytes pi = 2;
+  int32 z = 3;
+}
+
+message Empty {
+}
+
+message ResignCtrl {
+  int32 n = 1;
+  int32 f_p_n = 2;
+}
+
+message ResignThreshold {
+  int32 enabled = 1;
+  float v = 2;
+}

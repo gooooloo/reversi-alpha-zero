@@ -5,6 +5,7 @@ from src.reversi_zero.agent.api import MODEL_SERVING_READY, MODEL_SERVING_START,
     MODEL_SERVING_STARTED, MODEL_SERVING_STOPPED
 from src.reversi_zero.agent.model_cache import MODEL_CACHE_READY, RESET_CACHE_START, RESET_CACHE_END
 from src.reversi_zero.config import Config
+from src.reversi_zero.lib.grpc_helper import FileClient
 from src.reversi_zero.lib.model_helpler import fetch_remote_model_step_info
 from src.reversi_zero.lib.pipe_helper import PipeFilesManager, reverse_in_out
 from src.reversi_zero.lib.proc_helper import build_child_cmd, start_child_proc
@@ -21,6 +22,7 @@ class SelfWorker:
         self.config = config
         assert not self.config.opts.pipe_pairs
         self.pipe_files = PipeFilesManager.new_one(self.config)
+        self.file_client = FileClient(config)
         if self.config.opts.gpu_mem_frac is not None:
             self.config.opts.gpu_mem_frac /= 2
 
@@ -31,8 +33,6 @@ class SelfWorker:
     def start_model_serving_process(self, pipe_pairs, model_serving_step_check=None):
         import copy
         opts = copy.copy(self.config.opts)
-        opts.model_config_path = self.config.resource.model_config_path
-        opts.model_weight_path = self.config.resource.model_weight_path
         opts.model_serving_step_check = model_serving_step_check
         cmd = build_child_cmd(type='model_serving', opts=opts, pipe_pairs=pipe_pairs)
         return start_child_proc(cmd=cmd)
@@ -44,7 +44,7 @@ class SelfWorker:
     def fetch_remote_model_step_info(self):
         step_info = None
         while step_info is None:
-            step_info = fetch_remote_model_step_info(self.config)
+            step_info = fetch_remote_model_step_info(self.file_client)
         return step_info
 
     def start(self):
@@ -97,8 +97,6 @@ class SelfWorker:
                 if now_model_step < model_step:
                     # have no idea why it happens, but it does...
                     logger.info(f'now model step smaller than old model. WIRED!!')
-                sleep(self.config.play.model_check_interval_seconds)
-                continue
                 sleep(self.config.play.model_check_interval_seconds)
                 continue
             else:

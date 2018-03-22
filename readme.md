@@ -32,7 +32,7 @@ Suppose you having N(N>1) machines with GPU. You can use 1 for `opt` and
 
 ### On 1st GPU Machine
 Run below command. It is for optimization module. This command will
-consume all GPU resource. It loads play data and then train model, and
+consume all GPU resources. It loads play data and then train model, and
 saves it as newest.
 
 ```bash
@@ -42,7 +42,7 @@ python3.6 -m src.reversi_zero.run opt --env reversi
 Then run below command. It is for file server module (change 5678 to any
 other port you like). It is necessary because self play is running on
 other machines. This command doesn't need GPU. You need to figure out ip
-of this machine, since it is needed when self play on other machine.
+of this machine, since it is needed when self playing on other machines.
 
 ```bash
 python3.6 -m src.reversi_zero.run fs --env reversi --port 5678
@@ -56,10 +56,11 @@ machine, then you can run about 16 self play processes in parallel on
 this machine. So you can run below command.
 
 ```bash
-python3.6 -m src.reversi_zero.run self --env reversi --fs-url http://192.168.1.8:5678 --n-workers 16
+python3.6 -m src.reversi_zero.run self --env reversi --fs-url 192.168.1.8:5678 --n-workers 16
 ```
 
 And you are done.
+
 
 How to Train with AlphaGoZero Way
 =================================
@@ -70,7 +71,7 @@ Suppose you having N(N>2) machines with GPU. You can use 1 for `opt` and
 
 ### On 1st GPU Machine
 Run below command. It is for optimization module. This command will
-consume all GPU resource. It loads play data and then train model, and
+consume all GPU resources. It loads play data and then train model, and
 saves it as a candidate model.
 
 ```bash
@@ -91,9 +92,9 @@ python3.6 -m src.reversi_zero.run fs --env reversi --port 5678
 ### On 2nd GPU Machine
 Let's say you have 8 CPU cores on this machine, then you can run 4(=8/2)
 evaluation games in parallel. So run below command. It is for evaluator
-module. This command will consume all GPU resource. It loads last
+module. This command will consume all GPU resources. It loads latest
 candidate model and current model, play between them, and replace
-current model if candidate if the latter wins.
+current model with candidate if the latter wins.
 
 ```bash
 python3.6 -m src.reversi_zero.run eval --env reversi --fs-url http://192.168.1.8:5678 --n-workers 4
@@ -111,8 +112,8 @@ run below command.
 python3.6 -m src.reversi_zero.run self --env reversi --fs-url http://192.168.1.8:5678 --n-workers 16 --model-cache-size 10000000
 ```
 
-
 And you are done.
+
 
 Advanced Options
 ================
@@ -124,6 +125,7 @@ information (`src/reversi_zero/manager.py` would be a good entry point).
 ```
 Option list description as a TODO
 ```
+
 
 How to Manually Play Game with Trained Model
 ============================================
