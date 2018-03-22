@@ -5,7 +5,7 @@ Reversi reinforcement learning of [AlphaGo zero](https://deepmind.com/blog/alpha
 
 - This [version](https://github.com/gooooloo/reversi-alpha-zero/tree/0.1) of code is verified capable to solve 4x4 Reversi Problem using **AlphaGoZero** way.
 - This [version](https://github.com/gooooloo/reversi-alpha-zero/tree/0.2) of code is verified capable to train a rather strong 8x8 Reversi using **AlphaGoZero** way, which finally get a [NTest](https://github.com/weltyc/ntest) 10+ depth level. Detailed evaluation result is recorded [here](https://github.com/gooooloo/reversi-alpha-zero/blob/master/records.md#challenge-1).
-- This [Version](https://github.com/gooooloo/reversi-alpha-zero/tree/0.3) of coded is verified capable to train a rather strong 8x8 Reversi using **AlphaZero** way, which finally get a [NTest](https://github.com/weltyc/ntest) 10+ depth level. Detailed evaluation result is recorded [here](https://github.com/gooooloo/reversi-alpha-zero/blob/master/records.md#challenge-3).
+- This [Version](https://github.com/gooooloo/reversi-alpha-zero/tree/0.3) of code is verified capable to train a rather strong 8x8 Reversi using **AlphaZero** way, which finally get a [NTest](https://github.com/weltyc/ntest) 10+ depth level. Detailed evaluation result is recorded [here](https://github.com/gooooloo/reversi-alpha-zero/blob/master/records.md#challenge-3).
 
 
 Environment
