@@ -5,7 +5,7 @@ from logging import getLogger
 from src.reversi_zero.config import Config
 from src.reversi_zero.lib.model_helpler import ask_model_dir
 from src.reversi_zero.lib.proc_helper import build_child_cmd
-from src.reversi_zero.worker.elo_p1 import EloWorkerBase
+from src.reversi_zero.worker.play.elo_p1 import EloWorkerBase
 
 logger = getLogger(__name__)
 

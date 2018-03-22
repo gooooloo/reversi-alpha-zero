@@ -3,7 +3,7 @@ from logging import getLogger, WARNING
 
 from src.reversi_zero.config import Config, EloConfig
 from src.reversi_zero.lib.nboard import GTPNBoardGameObj
-from src.reversi_zero.worker.gtp_server import GTPServerWorker
+from src.reversi_zero.worker.internal.gtp_server import GTPServerWorker
 
 logger = getLogger()
 logger.setLevel(WARNING)

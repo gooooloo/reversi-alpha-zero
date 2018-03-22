@@ -4,7 +4,7 @@ from src.reversi_zero.agent.api import MODEL_SERVING_READY, MODEL_SERVING_START,
 from src.reversi_zero.config import Config
 from src.reversi_zero.lib.pipe_helper import reverse_in_out
 from src.reversi_zero.lib.proc_helper import build_child_cmd, start_child_proc
-from src.reversi_zero.worker.versus_n_games import VersusWorkerBase
+from src.reversi_zero.worker.internal.versus_n_games import VersusWorkerBase
 
 logger = getLogger(__name__)
 

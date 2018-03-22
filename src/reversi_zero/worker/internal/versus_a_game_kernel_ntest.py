@@ -2,7 +2,7 @@ from logging import getLogger
 
 from src.reversi_zero.config import Config
 from src.reversi_zero.lib.proc_helper import build_child_cmd, start_child_proc
-from src.reversi_zero.worker.versus_a_game_kernel import VersusPlayWorkerBase
+from src.reversi_zero.worker.internal.versus_a_game_kernel import VersusPlayWorkerBase
 
 logger = getLogger(__name__)
 

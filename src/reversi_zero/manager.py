@@ -11,10 +11,10 @@ logger = getLogger(__name__)
 
 CMD_LIST = [
     # train
-    'opt',  # training model, GPU required.
-    'self', # self play, GPU required.
-    'eval', # Evaluator, only for AlphaGoZero way. GPU required.
-    'fs',  # File server. CPU only.
+    'eval',  # Evaluator, only for AlphaGoZero way. GPU required.
+    'fs',    # File server. CPU only.
+    'opt',   # training model, GPU required.
+    'self',  # self play, GPU required.
 
     # play
     'elo_p1',
@@ -189,45 +189,44 @@ def start():
     setup(config,setup_logger_flag=setup_logger_flag)
 
     if args.cmd == "self":
-        from .worker import self_play as worker
+        from src.reversi_zero.worker.train import self_play as worker
     elif args.cmd == 'opt':
-        from .worker import optimize as worker
+        from src.reversi_zero.worker.train import optimize as worker
     elif args.cmd == 'eval':
-        from .worker import evaluate as worker
+        from src.reversi_zero.worker.train import evaluate as worker
+    elif args.cmd == 'fs':
+        from src.reversi_zero.worker.train import fs as worker
+
     elif args.cmd == 'play_gui':
-        from .play_game import gui as worker
+        from src.reversi_zero.worker.play import gui as worker
     elif args.cmd == 'elo_p1':
-        from .worker import elo_p1 as worker
-    elif args.cmd == 'fs_resign':
-        from .worker import resignation as worker
-    elif args.cmd == 'fs_model':
-        from .worker import resignation as worker
-    elif args.cmd == 'fs_play_data':
-        from .worker import resignation as worker
-    elif args.cmd == 'model_serving':
-        from .worker import model_serving as worker
-    elif args.cmd == 'model_cache':
-        from .worker import model_cache as worker
-    elif args.cmd == 'self_play_kernel':
-        from .worker import self_play_kernel as worker
-    elif args.cmd == 'versus_a_game_kernel':
-        from .worker import versus_a_game_kernel as worker
-    elif args.cmd == 'versus_n_games':
-        from .worker import versus_n_games as worker
-    elif args.cmd == 'gtp_server':
-        from .worker import gtp_server as worker
-    elif args.cmd == 'http_server':
-        from .worker import http_server as worker
+        from src.reversi_zero.worker.play import elo_p1 as worker
     elif args.cmd == 'league':
-        from .worker import league as worker
+        from src.reversi_zero.worker.play import league as worker
     elif args.cmd == 'elo_p1_ntest':
-        from .worker import elo_p1_ntest as worker
+        from src.reversi_zero.worker.play import elo_p1_ntest as worker
+    elif args.cmd == 'http_server':
+        from src.reversi_zero.worker.play import http_server as worker
+
+    elif args.cmd == 'model_serving':
+        from src.reversi_zero.worker.internal import model_serving as worker
+    elif args.cmd == 'model_cache':
+        from src.reversi_zero.worker.internal import model_cache as worker
+    elif args.cmd == 'self_play_kernel':
+        from src.reversi_zero.worker.internal import self_play_kernel as worker
+    elif args.cmd == 'versus_a_game_kernel':
+        from src.reversi_zero.worker.internal import versus_a_game_kernel as worker
+    elif args.cmd == 'versus_n_games':
+        from src.reversi_zero.worker.internal import versus_n_games as worker
+    elif args.cmd == 'gtp_server':
+        from src.reversi_zero.worker.internal import gtp_server as worker
     elif args.cmd == 'versus_a_game_kernel_ntest':
-        from .worker import versus_a_game_kernel_ntest as worker
+        from src.reversi_zero.worker.internal import versus_a_game_kernel_ntest as worker
     elif args.cmd == 'versus_n_games_ntest':
-        from .worker import versus_n_games_ntest as worker
+        from src.reversi_zero.worker.internal import versus_n_games_ntest as worker
     elif args.cmd == 'gtp_server_ntest':
-        from .worker import gtp_server_ntest as worker
+        from src.reversi_zero.worker.internal import gtp_server_ntest as worker
+
     else:
         raise Exception(f'unsupported cmd {args.cmd}')
 
