@@ -9,13 +9,17 @@ Distributed Reversi reinforcement learning of [AlphaGo zero](https://deepmind.co
 
 
 Environment
------------
+==========
 
 * Ubuntu. I don't tested it on other OS platform.
 * Python 3.6
 * tensorflow-gpu: 1.3.0+
 * Keras: 2.0.8
 
+
+Implementation Architecture
+==========
+![](/images/pipeline.png)
 
 Download Pretrained Model to Play with
 ==========
