@@ -1,7 +1,10 @@
 import os
+import random
 import signal
 import subprocess
 import sys
+
+import time
 
 from src.reversi_zero.lib.pipe_helper import dump_pipe_pairs_names
 
@@ -12,8 +15,9 @@ exit_tasks = []
 
 def build_child_cmd(type, opts, pipe_pairs):
 
-    tmp_config_file_path = f'/tmp/reresi_alpha_zero/{config.env.env_class_name}/' \
+    tmp_config_file_path = f'/tmp/reresi_alpha_zero/{opts.env}/' \
                            f'config_{time.time()}_{random.randint(100000, 999999)}.json'
+    os.makedirs(os.path.pardir, exist_ok=True)
 
     def remove_tmp_config_file(*args):
         import os

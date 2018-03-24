@@ -29,7 +29,7 @@ class SelfWorker:
         cmd = build_child_cmd(type='model_cache', opts=self.config.opts, pipe_pairs=pipe_pairs)
         return start_child_proc(cmd=cmd)
 
-    def start_serving_process(self, pipe_pairs):
+    def start_model_serving_process(self, pipe_pairs):
         cmd = build_child_cmd(type='model_serving', opts=self.config.opts, pipe_pairs=pipe_pairs)
         return start_child_proc(cmd=cmd)
 

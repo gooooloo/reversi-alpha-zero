@@ -3,7 +3,7 @@ import os
 from logging import getLogger, WARNING
 from random import random
 
-from src.reversi_zero.lib.chunk_pb2 import ResignFalsePositive, ResignThreshold
+from src.reversi_zero.lib.chunk_pb2 import ResignFalsePositive, ResignV
 
 logger = getLogger(__name__)
 getLogger('requests.packages.urllib3.connectionpool').setLevel(WARNING)
@@ -19,7 +19,7 @@ def decide_resign_v_once(config):
     else:
         v = -99999999
 
-    return ResignThreshold(should_resign=should_resign, v=v)
+    return ResignV(should_resign=should_resign, v=v)
 
 
 def handle_resign_false_positive_delta(config, delta):
