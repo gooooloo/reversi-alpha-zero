@@ -17,10 +17,6 @@ Environment
 * Keras: 2.0.8
 
 
-Implementation Architecture
-==========
-![](/images/pipeline.png)
-
 Download Pretrained Model to Play with
 ==========
 
@@ -30,10 +26,13 @@ Download Pretrained Model to Play with
 How to Train with AlphaZero Way
 ===============================
 
-
 Suppose you having N(N>1) machines with GPU. You can use 1 for `init`
 and `opt` and `fs` module, and the other N-1 for `self` module. More
 specifically:
+
+### Architecture
+==========
+![](/images/pipeline.png)
 
 ### On 1st GPU Machine
 
