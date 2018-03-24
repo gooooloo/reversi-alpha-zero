@@ -31,7 +31,6 @@ and `opt` and `fs` module, and the other N-1 for `self` module. More
 specifically:
 
 ### Architecture
-==========
 ![](/images/pipeline.png)
 
 ### On 1st GPU Machine
