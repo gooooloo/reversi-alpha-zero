@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='chunk.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\x0b\x63hunk.proto\"\x17\n\x05\x43hunk\x12\x0e\n\x06\x62uffer\x18\x01 \x01(\x0c\"*\n\x04Move\x12\x0b\n\x03\x63ob\x18\x01 \x01(\x0c\x12\n\n\x02pi\x18\x02 \x01(\x0c\x12\t\n\x01z\x18\x03 \x01(\x05\"\x07\n\x05\x45mpty\"&\n\nResignCtrl\x12\t\n\x01n\x18\x01 \x01(\x05\x12\r\n\x05\x66_p_n\x18\x02 \x01(\x05\"-\n\x0fResignThreshold\x12\x0f\n\x07\x65nabled\x18\x01 \x01(\x05\x12\t\n\x01v\x18\x02 \x01(\x02\x32\xee\x01\n\nFileServer\x12%\n\x10upload_play_data\x12\x05.Move\x1a\x06.Empty\"\x00(\x01\x12+\n\x15\x64ownload_model_config\x12\x06.Empty\x1a\x06.Chunk\"\x00\x30\x01\x12+\n\x15\x64ownload_model_weight\x12\x06.Empty\x1a\x06.Chunk\"\x00\x30\x01\x12+\n\x12report_resign_ctrl\x12\x0b.ResignCtrl\x1a\x06.Empty\"\x00\x12\x32\n\x14\x61sk_resign_threshold\x12\x06.Empty\x1a\x10.ResignThreshold\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x0b\x63hunk.proto\"\x17\n\x05\x43hunk\x12\x0e\n\x06\x62uffer\x18\x01 \x01(\x0c\"=\n\x04Move\x12\x0b\n\x03\x63ob\x18\x01 \x01(\x0c\x12\n\n\x02pi\x18\x02 \x01(\x0c\x12\t\n\x01z\x18\x03 \x01(\x05\x12\x11\n\tcob_dtype\x18\x04 \x01(\x05\"\x07\n\x05\x45mpty\"%\n\x0fModelGeneration\x12\x12\n\ngeneration\x18\x01 \x01(\x05\"/\n\x13ResignFalsePositive\x12\t\n\x01n\x18\x01 \x01(\x05\x12\r\n\x05\x66_p_n\x18\x02 \x01(\x05\"+\n\x07ResignV\x12\x15\n\rshould_resign\x18\x01 \x01(\x05\x12\t\n\x01v\x18\x02 \x01(\x02\x32\x85\x02\n\nFileServer\x12%\n\x10upload_play_data\x12\x05.Move\x1a\x06.Empty\"\x00(\x01\x12\x35\n\x15\x64ownload_model_config\x12\x10.ModelGeneration\x1a\x06.Chunk\"\x00\x30\x01\x12\x35\n\x15\x64ownload_model_weight\x12\x10.ModelGeneration\x1a\x06.Chunk\"\x00\x30\x01\x12>\n\x1creport_resign_false_positive\x12\x14.ResignFalsePositive\x1a\x06.Empty\"\x00\x12\"\n\x0c\x61sk_resign_v\x12\x06.Empty\x1a\x08.ResignV\"\x00\x62\x06proto3')
 )
 
 
@@ -84,6 +84,13 @@ _MOVE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='cob_dtype', full_name='Move.cob_dtype', index=3,
+      number=4, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -97,7 +104,7 @@ _MOVE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=40,
-  serialized_end=82,
+  serialized_end=101,
 )
 
 
@@ -120,27 +127,58 @@ _EMPTY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=84,
-  serialized_end=91,
+  serialized_start=103,
+  serialized_end=110,
 )
 
 
-_RESIGNCTRL = _descriptor.Descriptor(
-  name='ResignCtrl',
-  full_name='ResignCtrl',
+_MODELGENERATION = _descriptor.Descriptor(
+  name='ModelGeneration',
+  full_name='ModelGeneration',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='n', full_name='ResignCtrl.n', index=0,
+      name='generation', full_name='ModelGeneration.generation', index=0,
+      number=1, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=112,
+  serialized_end=149,
+)
+
+
+_RESIGNFALSEPOSITIVE = _descriptor.Descriptor(
+  name='ResignFalsePositive',
+  full_name='ResignFalsePositive',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='n', full_name='ResignFalsePositive.n', index=0,
       number=1, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='f_p_n', full_name='ResignCtrl.f_p_n', index=1,
+      name='f_p_n', full_name='ResignFalsePositive.f_p_n', index=1,
       number=2, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -158,27 +196,27 @@ _RESIGNCTRL = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=93,
-  serialized_end=131,
+  serialized_start=151,
+  serialized_end=198,
 )
 
 
-_RESIGNTHRESHOLD = _descriptor.Descriptor(
-  name='ResignThreshold',
-  full_name='ResignThreshold',
+_RESIGNV = _descriptor.Descriptor(
+  name='ResignV',
+  full_name='ResignV',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='enabled', full_name='ResignThreshold.enabled', index=0,
+      name='should_resign', full_name='ResignV.should_resign', index=0,
       number=1, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='v', full_name='ResignThreshold.v', index=1,
+      name='v', full_name='ResignV.v', index=1,
       number=2, type=2, cpp_type=6, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
@@ -196,15 +234,16 @@ _RESIGNTHRESHOLD = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=133,
-  serialized_end=178,
+  serialized_start=200,
+  serialized_end=243,
 )
 
 DESCRIPTOR.message_types_by_name['Chunk'] = _CHUNK
 DESCRIPTOR.message_types_by_name['Move'] = _MOVE
 DESCRIPTOR.message_types_by_name['Empty'] = _EMPTY
-DESCRIPTOR.message_types_by_name['ResignCtrl'] = _RESIGNCTRL
-DESCRIPTOR.message_types_by_name['ResignThreshold'] = _RESIGNTHRESHOLD
+DESCRIPTOR.message_types_by_name['ModelGeneration'] = _MODELGENERATION
+DESCRIPTOR.message_types_by_name['ResignFalsePositive'] = _RESIGNFALSEPOSITIVE
+DESCRIPTOR.message_types_by_name['ResignV'] = _RESIGNV
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Chunk = _reflection.GeneratedProtocolMessageType('Chunk', (_message.Message,), dict(
@@ -228,19 +267,26 @@ Empty = _reflection.GeneratedProtocolMessageType('Empty', (_message.Message,), d
   ))
 _sym_db.RegisterMessage(Empty)
 
-ResignCtrl = _reflection.GeneratedProtocolMessageType('ResignCtrl', (_message.Message,), dict(
-  DESCRIPTOR = _RESIGNCTRL,
+ModelGeneration = _reflection.GeneratedProtocolMessageType('ModelGeneration', (_message.Message,), dict(
+  DESCRIPTOR = _MODELGENERATION,
   __module__ = 'chunk_pb2'
-  # @@protoc_insertion_point(class_scope:ResignCtrl)
+  # @@protoc_insertion_point(class_scope:ModelGeneration)
   ))
-_sym_db.RegisterMessage(ResignCtrl)
+_sym_db.RegisterMessage(ModelGeneration)
 
-ResignThreshold = _reflection.GeneratedProtocolMessageType('ResignThreshold', (_message.Message,), dict(
-  DESCRIPTOR = _RESIGNTHRESHOLD,
+ResignFalsePositive = _reflection.GeneratedProtocolMessageType('ResignFalsePositive', (_message.Message,), dict(
+  DESCRIPTOR = _RESIGNFALSEPOSITIVE,
   __module__ = 'chunk_pb2'
-  # @@protoc_insertion_point(class_scope:ResignThreshold)
+  # @@protoc_insertion_point(class_scope:ResignFalsePositive)
   ))
-_sym_db.RegisterMessage(ResignThreshold)
+_sym_db.RegisterMessage(ResignFalsePositive)
+
+ResignV = _reflection.GeneratedProtocolMessageType('ResignV', (_message.Message,), dict(
+  DESCRIPTOR = _RESIGNV,
+  __module__ = 'chunk_pb2'
+  # @@protoc_insertion_point(class_scope:ResignV)
+  ))
+_sym_db.RegisterMessage(ResignV)
 
 
 
@@ -250,8 +296,8 @@ _FILESERVER = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=181,
-  serialized_end=419,
+  serialized_start=246,
+  serialized_end=507,
   methods=[
   _descriptor.MethodDescriptor(
     name='upload_play_data',
@@ -267,7 +313,7 @@ _FILESERVER = _descriptor.ServiceDescriptor(
     full_name='FileServer.download_model_config',
     index=1,
     containing_service=None,
-    input_type=_EMPTY,
+    input_type=_MODELGENERATION,
     output_type=_CHUNK,
     options=None,
   ),
@@ -276,26 +322,26 @@ _FILESERVER = _descriptor.ServiceDescriptor(
     full_name='FileServer.download_model_weight',
     index=2,
     containing_service=None,
-    input_type=_EMPTY,
+    input_type=_MODELGENERATION,
     output_type=_CHUNK,
     options=None,
   ),
   _descriptor.MethodDescriptor(
-    name='report_resign_ctrl',
-    full_name='FileServer.report_resign_ctrl',
+    name='report_resign_false_positive',
+    full_name='FileServer.report_resign_false_positive',
     index=3,
     containing_service=None,
-    input_type=_RESIGNCTRL,
+    input_type=_RESIGNFALSEPOSITIVE,
     output_type=_EMPTY,
     options=None,
   ),
   _descriptor.MethodDescriptor(
-    name='ask_resign_threshold',
-    full_name='FileServer.ask_resign_threshold',
+    name='ask_resign_v',
+    full_name='FileServer.ask_resign_v',
     index=4,
     containing_service=None,
     input_type=_EMPTY,
-    output_type=_RESIGNTHRESHOLD,
+    output_type=_RESIGNV,
     options=None,
   ),
 ])

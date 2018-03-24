@@ -11,6 +11,7 @@ logger = getLogger(__name__)
 
 CMD_LIST = [
     # train
+    'init',  # Model init.
     'eval',  # Evaluator, only for AlphaGoZero way. GPU required.
     'fs',    # File server. CPU only.
     'opt',   # training model, GPU required.
@@ -188,7 +189,9 @@ def start():
     setup_logger_flag = args.cmd != 'play_gui'
     setup(config,setup_logger_flag=setup_logger_flag)
 
-    if args.cmd == "self":
+    if args.cmd == 'init':
+        from src.reversi_zero.worker.train import init_model as worker
+    elif args.cmd == "self":
         from src.reversi_zero.worker.train import self_play as worker
     elif args.cmd == 'opt':
         from src.reversi_zero.worker.train import optimize as worker

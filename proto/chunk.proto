@@ -3,10 +3,10 @@ syntax = "proto3";
 
 service FileServer {
   rpc upload_play_data(stream Move) returns (Empty) {}
-  rpc download_model_config(Empty) returns (stream Chunk) {}
-  rpc download_model_weight(Empty) returns (stream Chunk) {}
-  rpc report_resign_ctrl(ResignCtrl) returns (Empty) {}
-  rpc ask_resign_threshold(Empty) returns (ResignThreshold) {}
+  rpc download_model_config(ModelGeneration) returns (stream Chunk) {}
+  rpc download_model_weight(ModelGeneration) returns (stream Chunk) {}
+  rpc report_resign_false_positive(ResignFalsePositive) returns (Empty) {}
+  rpc ask_resign_v(Empty) returns (ResignV) {}
 }
 
 message Chunk {
@@ -17,17 +17,22 @@ message Move {
   bytes cob = 1;
   bytes pi = 2;
   int32 z = 3;
+  int32 cob_dtype = 4;
 }
 
 message Empty {
 }
 
-message ResignCtrl {
+message ModelGeneration{
+  int32 generation = 1;
+}
+
+message ResignFalsePositive {
   int32 n = 1;
   int32 f_p_n = 2;
 }
 
-message ResignThreshold {
-  int32 enabled = 1;
+message ResignV {
+  int32 should_resign = 1;
   float v = 2;
 }

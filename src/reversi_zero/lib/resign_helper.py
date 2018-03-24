@@ -1,62 +1,48 @@
-from glob import glob
-from datetime import datetime
+import json
+import os
 from logging import getLogger, WARNING
 from random import random
-from time import sleep
-import tempfile
-import requests
-import os
-import json
 
-from src.reversi_zero.lib.grpc_helper import FileClient
+from src.reversi_zero.lib.chunk_pb2 import ResignFalsePositive, ResignThreshold
 
 logger = getLogger(__name__)
 getLogger('requests.packages.urllib3.connectionpool').setLevel(WARNING)
 
 
-class ResignCtrl:
-    def __init__(self, n=0, f_p_n=0):
-        self.n = n
-        self.f_p_n = f_p_n
-
-    def __iadd__(self, other):
-        self.n += other.n
-        self.f_p_n += other.f_p_n
-        return self
-
-
-def compute_resign_v(config):
+def decide_resign_v_once(config):
 
     prop = config.play.v_resign_disable_prop
-    enabled = config.play.can_resign and random() >= prop
-    if enabled:
-        loaded_v, _ = _load_resign(config.resource.resign_log_path)
-        resign_v = config.play.v_resign_init if loaded_v is None else loaded_v
+    should_resign = config.play.can_resign and random() >= prop
+    if should_resign:
+        v, _ = _load_resign(config.resource.resign_log_path)
+        v = config.play.v_resign_init if v is None else v
     else:
-        resign_v = -99999999
+        v = -99999999
 
-    return enabled, resign_v
+    return ResignThreshold(should_resign=should_resign, v=v)
 
 
-def handle_resign_ctrl_delta(config, delta):
+def handle_resign_false_positive_delta(config, delta):
+    assert delta.n >= delta.f_p_n >= 0
+
     try:
-        v, ctrl = _load_resign(config.resource.resign_log_path)
+        v, fp = _load_resign(config.resource.resign_log_path)
     except Exception as e:
         logger.debug(e)
-        v, ctrl = None, None
+        v, fp = None, None
 
-    ctrl = ctrl or ResignCtrl()
+    fp = fp or ResignFalsePositive(n=0, f_p_n=0)
     v = v if v is not None else config.play.v_resign_init
 
-    ctrl += delta
-    v = _new_v(config=config, v=v, ctrl=ctrl)
-    p = os.path.join(config.resource.resign_log_dir, config.resource.resign_log_path)
-    _save_resign(p=p, v=v, ctrl=ctrl)
+    fp.n += delta.n
+    fp.f_p_n += delta.f_p_n
+    v = _compute_new_v(config=config, v=v, fp=fp)
+    _save_resign(p=config.resource.resign_log_path, v=v, fp=fp)
 
 
-def _new_v(config, v, ctrl):
+def _compute_new_v(config, v, fp):
     min_n = config.play.v_resign_check_min_n
-    if ctrl.n < min_n:
+    if fp.n < min_n:
         return v
 
     v_resign_delta = config.play.v_resign_delta
@@ -66,7 +52,7 @@ def _new_v(config, v, ctrl):
     min_v = -0.95
 
     new_v = v
-    n, f_p_n = ctrl.n, ctrl.f_p_n
+    n, f_p_n = fp.n, fp.f_p_n
 
     fraction = float(f_p_n) / n
     logger.debug(f'resign f_p frac: {f_p_n} / {n} = {fraction}')
@@ -87,11 +73,11 @@ def _new_v(config, v, ctrl):
     return new_v
 
 
-def _save_resign(p, v, ctrl):
+def _save_resign(p, v, fp):
     j = dict()
     j['v'] = v
-    j['n'] = ctrl.n
-    j['fpn'] = ctrl.f_p_n
+    j['n'] = fp.n
+    j['fpn'] = fp.f_p_n
     with open(p, "wt") as f:
         json.dump(j, f)
 
@@ -101,7 +87,7 @@ def _load_resign(fn):
         with open(fn, "rt") as f:
             j = json.load(f)
             v = j['v']
-            c = ResignCtrl(n=j['n'], f_p_n=j['fpn'])
+            c = ResignFalsePositive(n=j['n'], f_p_n=j['fpn'])
             return v, c
 
     return None, None

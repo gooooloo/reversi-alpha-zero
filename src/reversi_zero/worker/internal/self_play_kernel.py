@@ -8,9 +8,8 @@ from src.reversi_zero.agent.api import ReversiModelAPIProxy
 from src.reversi_zero.agent.model_cache import ModelCacheClient
 from src.reversi_zero.agent.player import SelfPlayer
 from src.reversi_zero.config import Config
-from src.reversi_zero.lib import chunk_pb2
+from src.reversi_zero.lib.chunk_pb2 import ResignFalsePositive, Move
 from src.reversi_zero.lib.grpc_helper import FileClient
-from src.reversi_zero.lib.resign_helper import ResignCtrl
 
 logger = getLogger(__name__)
 
@@ -26,6 +25,7 @@ class SelfPlayWorker:
         assert len(self.config.opts.pipe_pairs) in (1, 2)
         self.api_pipe_pair = self.config.opts.pipe_pairs[0]
         self.api = ReversiModelAPIProxy(self.config, self.api_pipe_pair)
+        self.file_client = FileClient(self.config)
 
         if len(self.config.opts.pipe_pairs) > 1:
             self.cache_pipe_pair = self.config.opts.pipe_pairs[1]
@@ -34,33 +34,22 @@ class SelfPlayWorker:
             self.model_cache = None
 
     def start(self):
-
-        game_idx = 1
-
-        file_client = FileClient(self.config)
-
-        logger.debug("game is on!!!")
-        while True:
+        for game_idx in range(self.config.opts.n_games):
             start_time = time()
 
-            thres = file_client.ask_resign_threshold()
-            should_resign, resign_v = thres.enabled, thres.v
+            resign_v = self.file_client.ask_resign_v()
 
-            moves, resign_ctrl = self.play_a_game(should_resign, resign_v)
+            moves, resign_fp = self.play_a_game(resign_v)
 
             end_time = time()
             logger.debug(f"play game {game_idx} time={end_time - start_time} sec")
 
-            file_client.upload_play_data(moves)
+            self.file_client.upload_play_data(moves)
 
-            if resign_ctrl.n > 0:
-                file_client.report_resign_ctrl(resign_ctrl)
+            if resign_fp.n > 0:
+                self.file_client.report_resign_false_positive(resign_fp)
 
-            game_idx += 1
-            if game_idx > self.config.opts.n_games:
-                break
-
-    def play_a_game(self, should_resign, v_resign):
+    def play_a_game(self, resign_v):
         class_attr = getattr(importlib.import_module(self.config.env.env_module_name), self.config.env.env_class_name)
         env = class_attr()
         env.reset()
@@ -78,15 +67,17 @@ class SelfPlayWorker:
             tau = 1 if env.turn < self.config.play.change_tau_turn else 0
             act, pi, vs = player.think(tau)
 
-            if all(v < v_resign for v in vs):
-                if should_resign:
-                    # logger.debug(f'Resign: v={vs[0]:.4f}, child_v={vs[1]:.4f}, thres={v_resign:.4f}')
+            if all(v < resign_v.v for v in vs):
+                if resign_v.should_resign:
                     env.resign()
                     break
                 if resign_predicted_winner is None:
                     resign_predicted_winner = env.last_player
 
-            moves.append(chunk_pb2.Move(cob=env.compress_ob(env.observation).tobytes(), pi=np.asarray(pi).tobytes(), z=0))
+            moves.append(Move(cob=np.asarray(env.compress_ob(env.observation), dtype=env.cob_dtype).tobytes(),
+                              pi=np.asarray(pi, dtype=np.float32).tobytes(),
+                              z=0,
+                              cob_dtype=1 if env.cob_dtype == np.uint64 else 2))
 
             env.step(act)
             player.play(act)
@@ -102,9 +93,9 @@ class SelfPlayWorker:
 
         if resign_predicted_winner is not None:
             f_p_n = 0 if resign_predicted_winner == env.winner else 1
-            resign_ctrl = ResignCtrl(1, f_p_n)
+            resign_fp = ResignFalsePositive(n=1, f_p_n=f_p_n)
         else:
-            resign_ctrl = ResignCtrl(0, 0)
+            resign_fp = ResignFalsePositive(n=0, f_p_n=0)
 
-        return moves, resign_ctrl
+        return moves, resign_fp
 

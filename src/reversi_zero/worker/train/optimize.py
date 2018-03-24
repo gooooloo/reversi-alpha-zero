@@ -12,7 +12,7 @@ from keras.optimizers import SGD
 from src.reversi_zero.agent.model import ReversiModel, objective_function_for_policy, objective_function_for_value
 from src.reversi_zero.config import Config
 from src.reversi_zero.lib import tf_util
-from src.reversi_zero.lib.data_helper import get_game_data_filenames, read_data_from_file, \
+from src.reversi_zero.lib.data_helper import get_game_data_filenames, read_game_data_from_file, \
     save_unloaded_data_count, load_unloaded_data_count
 
 logger = getLogger(__name__)
@@ -25,7 +25,7 @@ def start(config: Config):
     return OptimizeWorker(config).start()
 
 
-class DataSet:
+class DataIndexer:
     def __init__(self, loaded_data):
         self.length_array = []
         self.filename_array = []
@@ -59,6 +59,9 @@ class OptimizeWorker:
         self.optimizer = None
         self.unloaded_data_count = 0
 
+        class_attr = getattr(importlib.import_module(self.config.env.env_module_name), self.config.env.env_class_name)
+        self.env = class_attr()
+
     def start(self):
         self.model, self.total_steps = self.load_model()
 
@@ -83,7 +86,7 @@ class OptimizeWorker:
                 self.load_play_data()
                 continue
             self.update_learning_rate()
-            steps = self.train_epoch(self.config.trainer.epoch_to_checkpoint)
+            steps = self.train_epoch()
             self.total_steps += steps
 
             if not self.config.trainer.need_eval:
@@ -102,10 +105,8 @@ class OptimizeWorker:
             self.load_play_data()
 
     def generate_train_data(self, batch_size):
-        class_attr = getattr(importlib.import_module(self.config.env.env_module_name), self.config.env.env_class_name)
-        env = class_attr()
         # The AZ paper doesn't leverage the symmetric observation data augmentation. But it is nice to use it if we can.
-        symmetric_n = env.rotate_flip_op_count
+        symmetric_n = self.env.rotate_flip_op_count
 
         while True:
             orig_data_size = self.dataset.size
@@ -119,12 +120,14 @@ class OptimizeWorker:
                 file_name, offset = self.dataset.locate(orig_n)
 
                 state, policy, z = self.loaded_data[file_name][offset]
-                state = env.decompress_ob(state)
+                state = np.frombuffer(state, dtype=self.env.cob_dtype)
+                state = self.env.decompress_ob(state)
+                policy = np.frombuffer(policy, dtype=np.float32)
 
                 if symmetric_n > 1:
                     op = n % symmetric_n
-                    state = env.rotate_flip_ob(state, op)
-                    policy = env.rotate_flip_pi(policy, op)
+                    state = self.env.rotate_flip_ob(state, op)
+                    policy = self.env.rotate_flip_pi(policy, op)
 
                 x.append(state)
                 y1.append(policy)
@@ -134,12 +137,12 @@ class OptimizeWorker:
             y = [np.asarray(y1), np.asarray(y2)]
             yield x, y
 
-    def train_epoch(self, epochs):
+    def train_epoch(self):
         tc = self.config.trainer
         self.model.model.fit_generator(generator=self.generate_train_data(tc.batch_size),
                                        steps_per_epoch=tc.epoch_steps,
-                                       epochs=epochs)
-        return tc.epoch_steps * epochs
+                                       epochs=1)
+        return tc.epoch_steps
 
     def compile_model(self):
         self.optimizer = SGD(lr=1e-2, momentum=0.9)
@@ -182,16 +185,11 @@ class OptimizeWorker:
         return self.dataset.size
 
     def load_model(self):
-        from reversi_zero.agent.model import ReversiModel
         model = ReversiModel(self.config)
 
         logger.info(f"loading model")
         cr = self.config.resource
         steps = model.load(cr.model_config_path, cr.model_weight_path)
-        if steps is None:
-            model.build()
-            steps = 0
-            model.save(cr.model_config_path, cr.model_weight_path, steps)
         return model, steps
 
     def load_play_data(self):
@@ -209,14 +207,14 @@ class OptimizeWorker:
 
         if updated:
             logger.info("updating training dataset")
-            self.dataset = DataSet(self.loaded_data)
+            self.dataset = DataIndexer(self.loaded_data)
 
         logger.info(f'loaded data size: {self.dataset_size}; unloaded data size: {self.unloaded_data_count}')
 
     def load_data_from_file(self, filename):
         try:
             logger.debug(f"loading data from {filename}")
-            data = read_data_from_file(filename)
+            data = read_game_data_from_file(filename)
             self.loaded_data[filename] = data
             self.loaded_filenames.add(filename)
         except Exception as e:

@@ -1,12 +1,11 @@
 from logging import getLogger
-from time import sleep
 
 from src.reversi_zero.agent.api import MODEL_SERVING_READY, MODEL_SERVING_START, MODEL_SERVING_STOP, \
     MODEL_SERVING_STARTED, MODEL_SERVING_STOPPED
 from src.reversi_zero.agent.model_cache import MODEL_CACHE_READY, RESET_CACHE_START, RESET_CACHE_END
 from src.reversi_zero.config import Config
 from src.reversi_zero.lib.grpc_helper import FileClient
-from src.reversi_zero.lib.model_helpler import fetch_remote_model_step_info
+from src.reversi_zero.lib.model_helpler import fetch_remote_model_step_info_not_none
 from src.reversi_zero.lib.pipe_helper import PipeFilesManager, reverse_in_out
 from src.reversi_zero.lib.proc_helper import build_child_cmd, start_child_proc
 
@@ -30,32 +29,23 @@ class SelfWorker:
         cmd = build_child_cmd(type='model_cache', opts=self.config.opts, pipe_pairs=pipe_pairs)
         return start_child_proc(cmd=cmd)
 
-    def start_model_serving_process(self, pipe_pairs, model_serving_step_check=None):
-        import copy
-        opts = copy.copy(self.config.opts)
-        opts.model_serving_step_check = model_serving_step_check
-        cmd = build_child_cmd(type='model_serving', opts=opts, pipe_pairs=pipe_pairs)
+    def start_serving_process(self, pipe_pairs):
+        cmd = build_child_cmd(type='model_serving', opts=self.config.opts, pipe_pairs=pipe_pairs)
         return start_child_proc(cmd=cmd)
 
     def start_a_self_play_process(self, pipe_pairs):
         cmd = build_child_cmd(type='self_play_kernel', opts=self.config.opts, pipe_pairs=pipe_pairs)
         return start_child_proc(cmd=cmd, nocuda=True)
 
-    def fetch_remote_model_step_info(self):
-        step_info = None
-        while step_info is None:
-            step_info = fetch_remote_model_step_info(self.file_client)
-        return step_info
-
     def start(self):
 
         pipe_pairs = self.pipe_files.make_pipes(2*self.config.opts.n_workers + 2)
-        model_serving_pps = pipe_pairs[:self.config.opts.n_workers+1]
+        serving_pps = pipe_pairs[:self.config.opts.n_workers+1]
         model_cache_pps = pipe_pairs[self.config.opts.n_workers+1:] if self.config.model_cache.model_cache_size else None
 
-        model_serving_process = self.start_model_serving_process(reverse_in_out(model_serving_pps))
+        serving_process = self.start_model_serving_process(reverse_in_out(serving_pps))
 
-        serving_and_me_pp = model_serving_pps[0]
+        serving_and_me_pp = serving_pps[0]
         serving_and_me_pp.open_read_nonblock()  # will close very late.
         x = serving_and_me_pp.read_int(allow_empty=False)
         assert x == MODEL_SERVING_READY
@@ -66,7 +56,7 @@ class SelfWorker:
         x = serving_and_me_pp.read_int(allow_empty=False)
         assert x == MODEL_SERVING_STARTED
 
-        model_serving_pps = model_serving_pps[1:]
+        serving_pps = serving_pps[1:]
 
         if model_cache_pps:
             self.start_model_cache_process(reverse_in_out(model_cache_pps))
@@ -80,26 +70,23 @@ class SelfWorker:
             cache_and_me_pp = None
 
         if model_cache_pps:
-            for pp0, pp1 in zip(model_serving_pps, model_cache_pps):
+            for pp0, pp1 in zip(serving_pps, model_cache_pps):
                 self.start_a_self_play_process([pp0, pp1])
         else:
-            for pp0 in model_serving_pps:
+            for pp0 in serving_pps:
                 self.start_a_self_play_process([pp0])
 
-        model_step = self.fetch_remote_model_step_info()
+        model_step = fetch_remote_model_step_info_not_none()
         assert model_step is not None
 
         while True:
-            now_model_step = self.fetch_remote_model_step_info()
+            now_model_step = fetch_remote_model_step_info_not_none()
+            assert now_model_step is not None
+            assert now_model_step >= model_step
             logger.info(f'old model step: {model_step}')
             logger.info(f'now model step: {now_model_step}')
-            if now_model_step <= model_step:
-                if now_model_step < model_step:
-                    # have no idea why it happens, but it does...
-                    logger.info(f'now model step smaller than old model. WIRED!!')
-                sleep(self.config.play.model_check_interval_seconds)
-                continue
-            else:
+
+            if now_model_step > model_step:
                 model_step = now_model_step
 
                 if cache_and_me_pp:
@@ -109,9 +96,9 @@ class SelfWorker:
                     cache_and_me_pp.close_write()
 
                 tmp_serving_and_me_pp = self.pipe_files.make_pipes(1)[0]
-                tmp_model_serving_pps = [tmp_serving_and_me_pp] + model_serving_pps
+                tmp_serving_pps = [tmp_serving_and_me_pp] + serving_pps
                 tmp_serving_and_me_pp.open_read_nonblock()  # will close very late.
-                tmp_model_serving_process = self.start_model_serving_process(reverse_in_out(tmp_model_serving_pps), model_step)
+                tmp_serving_process = self.start_model_serving_process(reverse_in_out(tmp_serving_pps))
 
                 x = tmp_serving_and_me_pp.read_int(allow_empty=False)
                 assert x == MODEL_SERVING_READY
@@ -128,11 +115,11 @@ class SelfWorker:
                 x = tmp_serving_and_me_pp.read_int(allow_empty=False)
                 assert x == MODEL_SERVING_STARTED
 
-                model_serving_process.kill()
+                serving_process.kill()
                 serving_and_me_pp.close_read()
                 self.pipe_files.clear_a_pipe(serving_and_me_pp)
 
-                model_serving_process = tmp_model_serving_process
+                serving_process = tmp_serving_process
                 serving_and_me_pp = tmp_serving_and_me_pp
 
                 if cache_and_me_pp:

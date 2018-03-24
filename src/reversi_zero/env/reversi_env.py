@@ -214,6 +214,10 @@ class ReversiEnv:
         return ob
 
 
+    @property
+    def cob_dtype(self):
+        return np.unit64
+
     @staticmethod
     def compress_ob(ob):
         cob = np.ndarray([len(ob)], dtype=np.uint64)

@@ -11,23 +11,26 @@ logger = getLogger(__name__)
 logger.setLevel(INFO)
 
 
+# will never return None
 def load_remote_model_weight(model, file_client:FileClient):
     retry_count_max = 10000
     retry_count = 0
     while retry_count < retry_count_max:
         try:
-            return load_model_weight_internal(model, file_client)
+            ret = _load_model_weight_internal(model, file_client)
+            if ret is not None:
+                return ret
         except Exception as e:
             logger.debug(e)
             logger.info("will retry")
-            # for whatever reason(e.g., network error), we sleep and retry.
-            time.sleep(0.1)
-            retry_count += 1
+        # for whatever reason(e.g., network error), we sleep and retry.
+        time.sleep(0.1)
+        retry_count += 1
 
     raise Exception(f"Failed to load model after {retry_count_max} tries!")
 
 
-def load_model_weight_internal(model, file_client:FileClient):
+def _load_model_weight_internal(model, file_client:FileClient):
 
     config_file = tempfile.NamedTemporaryFile(delete=False)
     config_file.close()
@@ -45,7 +48,25 @@ def load_model_weight_internal(model, file_client:FileClient):
     return loaded
 
 
-def fetch_remote_model_step_info(file_client:FileClient):
+def fetch_remote_model_step_info_not_none(file_client:FileClient):
+    retry_count_max = 10000
+    retry_count = 0
+    while retry_count < retry_count_max:
+        try:
+            ret = _fetch_remote_model_step_info_internal(file_client)
+            if ret is not None:
+                return ret
+        except Exception as e:
+            logger.debug(e)
+            logger.info("will retry")
+        # for whatever reason(e.g., network error), we sleep and retry.
+        time.sleep(0.1)
+        retry_count += 1
+
+    raise Exception(f"Failed to load model after {retry_count_max} tries!")
+
+
+def _fetch_remote_model_step_info_internal(file_client:FileClient):
 
     config_file = tempfile.NamedTemporaryFile(delete=False)
     config_file.close()

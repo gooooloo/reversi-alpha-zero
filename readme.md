@@ -31,11 +31,18 @@ How to Train with AlphaZero Way
 ===============================
 
 
-Suppose you having N(N>1) machines with GPU. You can use 1 for `opt` and
- `fs` module, and the other N-1 for `self` module. More specifically:
+Suppose you having N(N>1) machines with GPU. You can use 1 for `init`
+and `opt` and `fs` module, and the other N-1 for `self` module. More
+specifically:
 
 ### On 1st GPU Machine
-Run below command. It is for optimization module. This command will
+
+Run below command. It initialize the model randomly.
+```bash
+python3.6 -m src.reversi_zero.run init --env reversi
+```
+
+Then run below command. It is for optimization module. This command will
 consume all GPU resources. It loads play data and then train model, and
 saves it as newest.
 
@@ -69,11 +76,17 @@ And you are done.
 How to Train with AlphaGoZero Way
 =================================
 
-Suppose you having N(N>2) machines with GPU. You can use 1 for `opt` and
- `fs` module, 1 for `eval` module, and the other N-2 for `self` module.
- More specifically:
+Suppose you having N(N>2) machines with GPU. You can use 1 for `init`
+and `opt` and `fs` module, 1 for `eval` module, and the other N-2 for
+`self` module. More specifically:
 
 ### On 1st GPU Machine
+Run below command. It initialize the model randomly.
+
+```bash
+python3.6 -m src.reversi_zero.run init --env reversi
+```
+
 Run below command. It is for optimization module. This command will
 consume all GPU resources. It loads play data and then train model, and
 saves it as a candidate model.

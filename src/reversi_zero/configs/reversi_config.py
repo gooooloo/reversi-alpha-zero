@@ -52,7 +52,6 @@ class PlayConfig:
 class TrainerConfig:
     def __init__(self):
         self.batch_size = 3072              # AZ: 4096 - I don't have so much GPU memory though, MOKE: 512
-        self.epoch_to_checkpoint = 1
         self.start_total_steps = 0
         self.epoch_steps = 10               # AZ: 1?                                            MOKE: 200~9000
         # if saving too frequently, model saving time(12 seconds per saving)  will slow down opt speed

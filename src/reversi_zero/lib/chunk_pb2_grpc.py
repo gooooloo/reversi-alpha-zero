@@ -21,23 +21,23 @@ class FileServerStub(object):
         )
     self.download_model_config = channel.unary_stream(
         '/FileServer/download_model_config',
-        request_serializer=chunk__pb2.Empty.SerializeToString,
+        request_serializer=chunk__pb2.ModelGeneration.SerializeToString,
         response_deserializer=chunk__pb2.Chunk.FromString,
         )
     self.download_model_weight = channel.unary_stream(
         '/FileServer/download_model_weight',
-        request_serializer=chunk__pb2.Empty.SerializeToString,
+        request_serializer=chunk__pb2.ModelGeneration.SerializeToString,
         response_deserializer=chunk__pb2.Chunk.FromString,
         )
-    self.report_resign_ctrl = channel.unary_unary(
-        '/FileServer/report_resign_ctrl',
-        request_serializer=chunk__pb2.ResignCtrl.SerializeToString,
+    self.report_resign_false_positive = channel.unary_unary(
+        '/FileServer/report_resign_false_positive',
+        request_serializer=chunk__pb2.ResignFalsePositive.SerializeToString,
         response_deserializer=chunk__pb2.Empty.FromString,
         )
-    self.ask_resign_threshold = channel.unary_unary(
-        '/FileServer/ask_resign_threshold',
+    self.ask_resign_v = channel.unary_unary(
+        '/FileServer/ask_resign_v',
         request_serializer=chunk__pb2.Empty.SerializeToString,
-        response_deserializer=chunk__pb2.ResignThreshold.FromString,
+        response_deserializer=chunk__pb2.ResignV.FromString,
         )
 
 
@@ -66,14 +66,14 @@ class FileServerServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def report_resign_ctrl(self, request, context):
+  def report_resign_false_positive(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def ask_resign_threshold(self, request, context):
+  def ask_resign_v(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -90,23 +90,23 @@ def add_FileServerServicer_to_server(servicer, server):
       ),
       'download_model_config': grpc.unary_stream_rpc_method_handler(
           servicer.download_model_config,
-          request_deserializer=chunk__pb2.Empty.FromString,
+          request_deserializer=chunk__pb2.ModelGeneration.FromString,
           response_serializer=chunk__pb2.Chunk.SerializeToString,
       ),
       'download_model_weight': grpc.unary_stream_rpc_method_handler(
           servicer.download_model_weight,
-          request_deserializer=chunk__pb2.Empty.FromString,
+          request_deserializer=chunk__pb2.ModelGeneration.FromString,
           response_serializer=chunk__pb2.Chunk.SerializeToString,
       ),
-      'report_resign_ctrl': grpc.unary_unary_rpc_method_handler(
-          servicer.report_resign_ctrl,
-          request_deserializer=chunk__pb2.ResignCtrl.FromString,
+      'report_resign_false_positive': grpc.unary_unary_rpc_method_handler(
+          servicer.report_resign_false_positive,
+          request_deserializer=chunk__pb2.ResignFalsePositive.FromString,
           response_serializer=chunk__pb2.Empty.SerializeToString,
       ),
-      'ask_resign_threshold': grpc.unary_unary_rpc_method_handler(
-          servicer.ask_resign_threshold,
+      'ask_resign_v': grpc.unary_unary_rpc_method_handler(
+          servicer.ask_resign_v,
           request_deserializer=chunk__pb2.Empty.FromString,
-          response_serializer=chunk__pb2.ResignThreshold.SerializeToString,
+          response_serializer=chunk__pb2.ResignV.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

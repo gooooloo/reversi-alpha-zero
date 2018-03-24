@@ -40,30 +40,18 @@ class ReversiModelAPIServer:
         self.data_pipe_pairs = data_pipe_pairs
         self.file_client = FileClient(config)
 
-    def start(self):
-        self.predict_batch_worker()
-
     def _load_model(self):
         from src.reversi_zero.agent.model import ReversiModel
         from src.reversi_zero.lib.model_helpler import load_remote_model_weight
         self.agent_model = ReversiModel(self.config)
-        steps = load_remote_model_weight(self.agent_model, self.file_client)
-
-        target_steps = self.config.opts.model_serving_step_check
-        while target_steps is not None and steps != target_steps:
-            print(f'model loading, exp step {target_steps}, act step {steps}')
-            self.agent_model = ReversiModel(self.config)
-            steps = load_remote_model_weight(self.agent_model, self.file_client)
-
-        if steps is None:
-            raise Exception('no model!')
+        load_remote_model_weight(self.agent_model, self.file_client)
 
     def predict(self, x):
         assert x.ndim == 4, f'{x.ndim}'
         assert x.shape[1:] == self.config.model.input_size, f'{x.shape}'
         return self.agent_model.model.predict_on_batch(x)
 
-    def predict_batch_worker(self):
+    def start(self):
         self._load_model()
         for pp in self.data_pipe_pairs:
             pp.open_read_nonblock()
