@@ -9,7 +9,7 @@ from src.reversi_zero.agent.model_cache import ModelCacheClient
 from src.reversi_zero.agent.player import SelfPlayer
 from src.reversi_zero.config import Config
 from src.reversi_zero.lib.chunk_pb2 import ResignFalsePositive, Move
-from src.reversi_zero.lib.grpc_helper import FileClient
+from src.reversi_zero.lib.grpc_helper import GrpcClient
 
 logger = getLogger(__name__)
 
@@ -25,7 +25,7 @@ class SelfPlayWorker:
         assert len(self.config.opts.pipe_pairs) in (1, 2)
         self.api_pipe_pair = self.config.opts.pipe_pairs[0]
         self.api = ReversiModelAPIProxy(self.config, self.api_pipe_pair)
-        self.file_client = FileClient(self.config)
+        self.grpc_client = GrpcClient(self.config)
 
         if len(self.config.opts.pipe_pairs) > 1:
             self.cache_pipe_pair = self.config.opts.pipe_pairs[1]
@@ -37,17 +37,17 @@ class SelfPlayWorker:
         for game_idx in range(self.config.opts.n_games):
             start_time = time()
 
-            resign_v = self.file_client.ask_resign_v()
+            resign_v = self.grpc_client.ask_resign_v()
 
             moves, resign_fp = self.play_a_game(resign_v)
 
             end_time = time()
             logger.debug(f"play game {game_idx} time={end_time - start_time} sec")
 
-            self.file_client.upload_play_data(moves)
+            self.grpc_client.upload_play_data(moves)
 
             if resign_fp.n > 0:
-                self.file_client.report_resign_false_positive(resign_fp)
+                self.grpc_client.report_resign_false_positive(resign_fp)
 
     def play_a_game(self, resign_v):
         class_attr = getattr(importlib.import_module(self.config.env.env_module_name), self.config.env.env_class_name)

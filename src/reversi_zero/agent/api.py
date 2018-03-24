@@ -1,6 +1,6 @@
 import numpy as np
 from src.reversi_zero.config import Config
-from src.reversi_zero.lib.grpc_helper import FileClient
+from src.reversi_zero.lib.grpc_helper import GrpcClient
 from src.reversi_zero.lib.pipe_helper import PipePair
 
 BUFFER_DTYPE = np.float32
@@ -38,13 +38,13 @@ class ReversiModelAPIServer:
 
         self.parent_pipe_pair = parent_pipe_pair
         self.data_pipe_pairs = data_pipe_pairs
-        self.file_client = FileClient(config)
+        self.grpc_client = GrpcClient(config)
 
     def _load_model(self):
         from src.reversi_zero.agent.model import ReversiModel
         from src.reversi_zero.lib.model_helpler import load_remote_model_weight
         self.agent_model = ReversiModel(self.config)
-        load_remote_model_weight(self.agent_model, self.file_client)
+        load_remote_model_weight(self.agent_model, self.grpc_client)
 
     def predict(self, x):
         assert x.ndim == 4, f'{x.ndim}'

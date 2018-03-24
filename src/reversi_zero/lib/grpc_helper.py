@@ -34,7 +34,7 @@ def save_chunks_to_file(chunks, filename):
             f.write(chunk.buffer)
 
 
-class FileClient:
+class GrpcClient:
     def __init__(self, config):
         channel = grpc.insecure_channel(f'{config.opts.http_url}:{config.opts.http_port}')
         self.stub = chunk_pb2_grpc.FileServerStub(channel)
@@ -57,7 +57,7 @@ class FileClient:
         self.stub.ask_resign_v(chunk_pb2.Empty())
 
 
-class FileServer(chunk_pb2_grpc.FileServerServicer):
+class GrpcServer(chunk_pb2_grpc.FileServerServicer):
     def __init__(self, config : Config):
         self.config = config
         self.play_data = []

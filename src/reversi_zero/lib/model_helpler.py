@@ -5,19 +5,19 @@ import os
 import time
 
 from src.reversi_zero.agent.model import ReversiModel
-from src.reversi_zero.lib.grpc_helper import FileClient
+from src.reversi_zero.lib.grpc_helper import GrpcClient
 
 logger = getLogger(__name__)
 logger.setLevel(INFO)
 
 
 # will never return None
-def load_remote_model_weight(model, file_client:FileClient):
+def load_remote_model_weight(model, grpc_client:GrpcClient):
     retry_count_max = 10000
     retry_count = 0
     while retry_count < retry_count_max:
         try:
-            ret = _load_model_weight_internal(model, file_client)
+            ret = _load_model_weight_internal(model, grpc_client)
             if ret is not None:
                 return ret
         except Exception as e:
@@ -30,15 +30,15 @@ def load_remote_model_weight(model, file_client:FileClient):
     raise Exception(f"Failed to load model after {retry_count_max} tries!")
 
 
-def _load_model_weight_internal(model, file_client:FileClient):
+def _load_model_weight_internal(model, grpc_client:GrpcClient):
 
     config_file = tempfile.NamedTemporaryFile(delete=False)
     config_file.close()
-    file_client.download_model_config(config_file.name)
+    grpc_client.download_model_config(config_file.name)
 
     weight_file = tempfile.NamedTemporaryFile(delete=False)
     weight_file.close()
-    file_client.download_model_weight(weight_file.name)
+    grpc_client.download_model_weight(weight_file.name)
 
     loaded = model.load(config_file.name, weight_file.name)
 
@@ -48,12 +48,12 @@ def _load_model_weight_internal(model, file_client:FileClient):
     return loaded
 
 
-def fetch_remote_model_step_info_not_none(file_client:FileClient):
+def fetch_remote_model_step_info_not_none(grpc_client:GrpcClient):
     retry_count_max = 10000
     retry_count = 0
     while retry_count < retry_count_max:
         try:
-            ret = _fetch_remote_model_step_info_internal(file_client)
+            ret = _fetch_remote_model_step_info_internal(grpc_client)
             if ret is not None:
                 return ret
         except Exception as e:
@@ -66,12 +66,12 @@ def fetch_remote_model_step_info_not_none(file_client:FileClient):
     raise Exception(f"Failed to load model after {retry_count_max} tries!")
 
 
-def _fetch_remote_model_step_info_internal(file_client:FileClient):
+def _fetch_remote_model_step_info_internal(grpc_client:GrpcClient):
 
     config_file = tempfile.NamedTemporaryFile(delete=False)
     config_file.close()
 
-    file_client.download_model_config(config_file.name)
+    grpc_client.download_model_config(config_file.name)
     digest = ReversiModel.load_step_info(config_file.name)
 
     os.unlink(config_file.name)

@@ -1,15 +1,10 @@
-import os
 from logging import getLogger
 
-from src.reversi_zero.agent.model import ReversiModel
 from src.reversi_zero.config import Config
+from src.reversi_zero.lib.grpc_helper import GrpcServer
 
 logger = getLogger(__name__)
 
 
 def start(config: Config):
-    model = ReversiModel(config)
-    cr = config.resource
-    if not os.exists(cr.model_config_path) or not os.exists(cr.model_weight_path):
-        model.build()
-        model.save(cr.model_config_path, cr.model_weight_path, 0)
+    GrpcServer(config).start()

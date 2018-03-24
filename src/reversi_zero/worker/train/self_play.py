@@ -4,7 +4,7 @@ from src.reversi_zero.agent.api import MODEL_SERVING_READY, MODEL_SERVING_START,
     MODEL_SERVING_STARTED, MODEL_SERVING_STOPPED
 from src.reversi_zero.agent.model_cache import MODEL_CACHE_READY, RESET_CACHE_START, RESET_CACHE_END
 from src.reversi_zero.config import Config
-from src.reversi_zero.lib.grpc_helper import FileClient
+from src.reversi_zero.lib.grpc_helper import GrpcClient
 from src.reversi_zero.lib.model_helpler import fetch_remote_model_step_info_not_none
 from src.reversi_zero.lib.pipe_helper import PipeFilesManager, reverse_in_out
 from src.reversi_zero.lib.proc_helper import build_child_cmd, start_child_proc
@@ -21,7 +21,7 @@ class SelfWorker:
         self.config = config
         assert not self.config.opts.pipe_pairs
         self.pipe_files = PipeFilesManager.new_one(self.config)
-        self.file_client = FileClient(config)
+        self.grpc_client = GrpcClient(config)
         if self.config.opts.gpu_mem_frac is not None:
             self.config.opts.gpu_mem_frac /= 2
 
