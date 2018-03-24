@@ -10,6 +10,6 @@ logger = getLogger(__name__)
 def start(config: Config):
     model = ReversiModel(config)
     cr = config.resource
-    if not os.exists(cr.model_config_path) or not os.exists(cr.model_weight_path):
+    if not os.path.exists(cr.model_config_path) or not os.path.exists(cr.model_weight_path):
         model.build()
         model.save(cr.model_config_path, cr.model_weight_path, 0)
