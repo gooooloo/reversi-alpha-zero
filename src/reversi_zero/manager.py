@@ -58,7 +58,7 @@ def create_parser():
     parser.add_argument("--gpu-mem-frac", help="gpu memory fraction", default=None)
     parser.add_argument("--http-port", help="", type=int, default=8888)
     parser.add_argument("--http-server-type", help="", default=None)
-    parser.add_argument("--http-url", help="", default=None)
+    parser.add_argument("--http-url", help="", default='localhost')
     parser.add_argument("--league-result", help="",  default='./league-result.txt')
     parser.add_argument("--model-cache-size", help="", type=int, default=None)
     parser.add_argument("--model-config-path", help="model-config-path", default=None)

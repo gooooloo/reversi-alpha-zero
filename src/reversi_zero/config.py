@@ -18,7 +18,7 @@ class Config:
         elif opts.env == 'reversi6x6':
             from .configs import reversi6x6_config as env_specific
         else:
-            raise Exception(f"unknown env: {env}")
+            raise Exception(f"unknown env: {opts.env}")
 
         self.opts = opts
         self.resource = ResourceConfig(opts.env)
@@ -41,43 +41,44 @@ class Config:
 
 
 class Options:
-    ask_model = None
-    can_resign = None
-    cmd = None
-    elo_k = None
-    env = None
-    gpu_mem_frac = None
-    http_port = None
-    http_url = None
-    league_result = None
-    model_cache_size = None
-    model_config_path = None
-    model_serving_step_check = None
-    model_weight_path = None
-    n_games = 9999999999
-    n_minutes = None
-    n_sims = None
-    n_steps_model = None
-    n_workers = 1
-    need_eval = None
-    ntest_depth = 1
-    p1_elo = None
-    p1_first = None
-    p1_model_config_path = None
-    p1_model_weight_path = None
-    p1_n_sims = None
-    p1_name = None
-    p2_elo = None
-    p2_model_config_path = None
-    p2_model_weight_path = None
-    p2_n_sims = None
-    p2_name = None
-    pipe_pairs = None
-    pipes = None
-    render = None
-    save_versus_dir = None
-    start_total_steps = None
-    total_step = None
+    def __init__(self):
+        self.ask_model = None
+        self.can_resign = None
+        self.cmd = None
+        self.elo_k = None
+        self.env = None
+        self.gpu_mem_frac = None
+        self.http_port = None
+        self.http_url = None
+        self.league_result = None
+        self.model_cache_size = None
+        self.model_config_path = None
+        self.model_serving_step_check = None
+        self.model_weight_path = None
+        self.n_games = 9999999999
+        self.n_minutes = None
+        self.n_sims = None
+        self.n_steps_model = None
+        self.n_workers = 1
+        self.need_eval = None
+        self.ntest_depth = 1
+        self.p1_elo = None
+        self.p1_first = None
+        self.p1_model_config_path = None
+        self.p1_model_weight_path = None
+        self.p1_n_sims = None
+        self.p1_name = None
+        self.p2_elo = None
+        self.p2_model_config_path = None
+        self.p2_model_weight_path = None
+        self.p2_n_sims = None
+        self.p2_name = None
+        self.pipe_pairs = None
+        self.pipes = None
+        self.render = None
+        self.save_versus_dir = None
+        self.start_total_steps = None
+        self.total_step = None
 
 
 class ResourceConfig:

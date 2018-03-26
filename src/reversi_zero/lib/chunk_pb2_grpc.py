@@ -47,35 +47,30 @@ class FileServerServicer(object):
 
   def upload_play_data(self, request_iterator, context):
     # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def download_model_config(self, request, context):
     # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def download_model_weight(self, request, context):
     # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def report_resign_false_positive(self, request, context):
     # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def ask_resign_v(self, request, context):
     # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')

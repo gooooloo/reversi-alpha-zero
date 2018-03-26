@@ -24,9 +24,10 @@ def build_child_cmd(type, opts, pipe_pairs):
         os.unlink(tmp_config_file_path)
     add_exit_task(remove_tmp_config_file)
 
+    os.makedirs(os.path.dirname(tmp_config_file_path), exist_ok=True)
     with open(tmp_config_file_path, 'wt') as f:
         import json
-        json.dump(f, opts.__dict__)
+        json.dump(opts.__dict__, f)
 
     cmd = ['python3.6', '-m', 'src.reversi_zero.run', type,
            '--pipe', dump_pipe_pairs_names(pipe_pairs),
