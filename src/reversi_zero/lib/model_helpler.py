@@ -56,7 +56,7 @@ def fetch_remote_model_step_info_not_none(grpc_client:GrpcClient):
             if ret is not None:
                 return ret
         except Exception as e:
-            logger.debug(e)
+            logger.info(e)
             logger.info("will retry")
         # for whatever reason(e.g., network error), we sleep and retry.
         time.sleep(0.1)

@@ -76,11 +76,11 @@ class SelfWorker:
             for pp0 in serving_pps:
                 self.start_a_self_play_process([pp0])
 
-        model_step = fetch_remote_model_step_info_not_none()
+        model_step = fetch_remote_model_step_info_not_none(self.grpc_client)
         assert model_step is not None
 
         while True:
-            now_model_step = fetch_remote_model_step_info_not_none()
+            now_model_step = fetch_remote_model_step_info_not_none(self.grpc_client)
             assert now_model_step is not None
             assert now_model_step >= model_step
             logger.info(f'old model step: {model_step}')
