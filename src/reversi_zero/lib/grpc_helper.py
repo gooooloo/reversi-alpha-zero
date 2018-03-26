@@ -47,11 +47,11 @@ class GrpcClient:
     def upload_play_data(self, play_data):
         self.stub.upload_play_data(play_data)
 
-    def download_model_config(self, out_file_name, model_generation):
+    def download_model_config(self, out_file_name, model_generation=-1):
         response = self.stub.download_model_config(chunk_pb2.ModelGeneration(generation=model_generation))
         save_chunks_to_file(response, out_file_name)
 
-    def download_model_weight(self, out_file_name, model_generation):
+    def download_model_weight(self, out_file_name, model_generation=-1):
         response = self.stub.download_model_weight(chunk_pb2.ModelGeneration(generation=model_generation))
         save_chunks_to_file(response, out_file_name)
 
@@ -66,7 +66,7 @@ class GrpcServer(chunk_pb2_grpc.FileServerServicer):
     def __init__(self, config : Config):
         self.config = config
         self.play_data = []
-        self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
+        self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         chunk_pb2_grpc.add_FileServerServicer_to_server(self, self.server)
 
     # servicer api implementation

@@ -21,7 +21,7 @@ def load_remote_model_weight(model, grpc_client:GrpcClient):
             if ret is not None:
                 return ret
         except Exception as e:
-            logger.debug(e)
+            logger.info(e)
             logger.info("will retry")
         # for whatever reason(e.g., network error), we sleep and retry.
         time.sleep(0.1)
@@ -31,7 +31,6 @@ def load_remote_model_weight(model, grpc_client:GrpcClient):
 
 
 def _load_model_weight_internal(model, grpc_client:GrpcClient):
-
     config_file = tempfile.NamedTemporaryFile(delete=False)
     config_file.close()
     grpc_client.download_model_config(config_file.name)
