@@ -44,7 +44,7 @@ class SelfPlayWorker:
             end_time = time()
             logger.debug(f"play game {game_idx} time={end_time - start_time} sec")
 
-            self.grpc_client.upload_play_data(moves)
+            self.grpc_client.upload_play_data(iter(moves))
 
             if resign_fp.n > 0:
                 self.grpc_client.report_resign_false_positive(resign_fp)
