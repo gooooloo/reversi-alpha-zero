@@ -1,6 +1,6 @@
 class PlayDataConfig:
     def __init__(self):
-        self.nb_game_in_file = 1000
+        self.nb_move_in_file = 300
         self.max_file_num = 500
 
 

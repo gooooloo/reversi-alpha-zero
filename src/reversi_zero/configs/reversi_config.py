@@ -19,7 +19,7 @@ class PlayDataConfig:
         #
         # Small nb_game_in_file make training data update more frequently,
         # Large max_file_num make larger overhead reading file
-        self.nb_game_in_file = 5            # MOKE: 5
+        self.nb_move_in_file = 300          # MOKE: N/A
         self.max_file_num = 10000           # MOKE: 2000
 
 

@@ -76,11 +76,12 @@ class GrpcServer(chunk_pb2_grpc.FileServerServicer):
         for move in request_iterator:
             self.play_data.append(move)
 
-            if len(self.play_data) >= self.config.play_data.nb_game_in_file:
+            if len(self.play_data) >= self.config.play_data.nb_move_in_file:
                 save_play_data(self.config.resource, self.play_data)
                 remove_old_play_data(self.config)
                 self.play_data = []
 
+        logger.info('upload_play_data done')
         return chunk_pb2.Empty()
 
     # servicer api implementation
