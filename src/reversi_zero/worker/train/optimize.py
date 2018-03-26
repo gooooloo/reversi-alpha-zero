@@ -11,6 +11,7 @@ from keras.optimizers import SGD
 
 from src.reversi_zero.agent.model import ReversiModel, objective_function_for_policy, objective_function_for_value
 from src.reversi_zero.config import Config
+from src.reversi_zero.lib import chunk_pb2
 from src.reversi_zero.lib import tf_util
 from src.reversi_zero.lib.data_helper import get_game_data_filenames, read_game_data_from_file, \
     save_unloaded_data_count, load_unloaded_data_count
@@ -119,10 +120,10 @@ class OptimizeWorker:
 
                 file_name, offset = self.dataset.locate(orig_n)
 
-                state, policy, z = self.loaded_data[file_name][offset]
-                state = np.frombuffer(state, dtype=self.env.cob_dtype)
+                move = self.loaded_data[file_name][offset]
+                state = np.frombuffer(move.cob, dtype=self.env.cob_dtype)
                 state = self.env.decompress_ob(state)
-                policy = np.frombuffer(policy, dtype=np.float32)
+                policy = np.frombuffer(move.pi, dtype=np.float32)
 
                 if symmetric_n > 1:
                     op = n % symmetric_n
@@ -131,7 +132,7 @@ class OptimizeWorker:
 
                 x.append(state)
                 y1.append(policy)
-                y2.append([z])
+                y2.append([move.z])
 
             x = np.asarray(x)
             y = [np.asarray(y1), np.asarray(y2)]

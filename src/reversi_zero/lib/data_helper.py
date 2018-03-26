@@ -4,7 +4,11 @@ from logging import getLogger
 import json
 import os
 
+from google.protobuf.internal.encoder import _VarintBytes
+from google.protobuf.internal.decoder import _DecodeVarint32
+
 from src.reversi_zero.config import ResourceConfig
+from src.reversi_zero.lib import chunk_pb2
 
 logger = getLogger(__name__)
 
@@ -20,16 +24,33 @@ def get_game_data_statistics_filename(rc: ResourceConfig):
 
 
 def read_game_data_from_file(path):
-    with open(path, "rt") as f:
-        return json.load(f)
+    moves = []
+    with open(path, 'rb') as f:
+        buff = f.read()
+        pos = 0
+        n, pos = _DecodeVarint32(buff, pos)
+        for _ in range(n):
+            length, pos = _DecodeVarint32(buff, pos)
+            tmpbuf = buff[pos:pos+length]
+            pos += length
+
+            move = chunk_pb2.Move()
+            move.ParseFromString(tmpbuf)
+            moves.append(move)
+    return moves
 
 
 def save_play_data(rc, moves):
     game_id = datetime.now().strftime("%Y%m%d-%H%M%S.%f")
     path = os.path.join(rc.play_data_dir, rc.play_data_filename_tmpl % game_id)
     logger.info(f"save play data to {path}")
-    with open(path, "wt") as f:
-        json.dump(moves, f)
+
+    with open(path, 'wb') as f:
+        f.write(_VarintBytes(len(moves)))
+        for move in moves:
+            size = move.ByteSize()
+            f.write(_VarintBytes(size))
+            f.write(move.SerializeToString())
 
 
 def remove_old_play_data(config):

@@ -68,12 +68,12 @@ class GrpcServer(chunk_pb2_grpc.FileServerServicer):
     def upload_play_data(self, request_iterator, context):
         from src.reversi_zero.lib.data_helper import save_play_data
         for move in request_iterator:
-            self.play_data.append([move.cob, move.pi, move.z])
+            self.play_data.append(move)
 
-        if len(self.play_data) > self.config.play_data.nb_game_in_file:
-            save_play_data(self.config.resource, self.play_data)
-            remove_old_play_data(self.config)
-            self.play_data = []
+            if len(self.play_data) >= self.config.play_data.nb_game_in_file:
+                save_play_data(self.config.resource, self.play_data)
+                remove_old_play_data(self.config)
+                self.play_data = []
 
         return chunk_pb2.Empty()
 

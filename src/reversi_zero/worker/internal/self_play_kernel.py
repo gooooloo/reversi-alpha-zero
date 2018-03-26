@@ -76,8 +76,7 @@ class SelfPlayWorker:
 
             moves.append(Move(cob=np.asarray(env.compress_ob(env.observation), dtype=env.cob_dtype).tobytes(),
                               pi=np.asarray(pi, dtype=np.float32).tobytes(),
-                              z=0,
-                              cob_dtype=1 if env.cob_dtype == np.uint64 else 2))
+                              z=0))
 
             env.step(act)
             player.play(act)
