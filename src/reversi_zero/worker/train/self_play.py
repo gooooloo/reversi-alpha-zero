@@ -1,5 +1,7 @@
 from logging import getLogger
 
+import time
+
 from src.reversi_zero.agent.api import MODEL_SERVING_READY, MODEL_SERVING_START, MODEL_SERVING_STOP, \
     MODEL_SERVING_STARTED, MODEL_SERVING_STOPPED
 from src.reversi_zero.agent.model_cache import MODEL_CACHE_READY, RESET_CACHE_START, RESET_CACHE_END
@@ -86,45 +88,48 @@ class SelfWorker:
             logger.info(f'old model step: {model_step}')
             logger.info(f'now model step: {now_model_step}')
 
-            if now_model_step > model_step:
-                model_step = now_model_step
+            if now_model_step == model_step:
+                time.sleep(60)
+                continue
 
-                if cache_and_me_pp:
-                    logger.info('reset cache start')
-                    cache_and_me_pp.open_write_nonblock()
-                    cache_and_me_pp.write_int(RESET_CACHE_START)
-                    cache_and_me_pp.close_write()
+            model_step = now_model_step
 
-                tmp_serving_and_me_pp = self.pipe_files.make_pipes(1)[0]
-                tmp_serving_pps = [tmp_serving_and_me_pp] + serving_pps
-                tmp_serving_and_me_pp.open_read_nonblock()  # will close very late.
-                tmp_serving_process = self.start_model_serving_process(reverse_in_out(tmp_serving_pps))
+            if cache_and_me_pp:
+                logger.info('reset cache start')
+                cache_and_me_pp.open_write_nonblock()
+                cache_and_me_pp.write_int(RESET_CACHE_START)
+                cache_and_me_pp.close_write()
 
-                x = tmp_serving_and_me_pp.read_int(allow_empty=False)
-                assert x == MODEL_SERVING_READY
+            tmp_serving_and_me_pp = self.pipe_files.make_pipes(1)[0]
+            tmp_serving_pps = [tmp_serving_and_me_pp] + serving_pps
+            tmp_serving_and_me_pp.open_read_nonblock()  # will close very late.
+            tmp_serving_process = self.start_model_serving_process(reverse_in_out(tmp_serving_pps))
 
-                serving_and_me_pp.open_write_nonblock()
-                serving_and_me_pp.write_int(MODEL_SERVING_STOP)
-                serving_and_me_pp.close_write()
-                x = serving_and_me_pp.read_int(allow_empty=False)
-                assert x == MODEL_SERVING_STOPPED
+            x = tmp_serving_and_me_pp.read_int(allow_empty=False)
+            assert x == MODEL_SERVING_READY
 
-                tmp_serving_and_me_pp.open_write_nonblock()
-                tmp_serving_and_me_pp.write_int(MODEL_SERVING_START)
-                tmp_serving_and_me_pp.close_write()
-                x = tmp_serving_and_me_pp.read_int(allow_empty=False)
-                assert x == MODEL_SERVING_STARTED
+            serving_and_me_pp.open_write_nonblock()
+            serving_and_me_pp.write_int(MODEL_SERVING_STOP)
+            serving_and_me_pp.close_write()
+            x = serving_and_me_pp.read_int(allow_empty=False)
+            assert x == MODEL_SERVING_STOPPED
 
-                serving_process.kill()
-                serving_and_me_pp.close_read()
-                self.pipe_files.clear_a_pipe(serving_and_me_pp)
+            tmp_serving_and_me_pp.open_write_nonblock()
+            tmp_serving_and_me_pp.write_int(MODEL_SERVING_START)
+            tmp_serving_and_me_pp.close_write()
+            x = tmp_serving_and_me_pp.read_int(allow_empty=False)
+            assert x == MODEL_SERVING_STARTED
 
-                serving_process = tmp_serving_process
-                serving_and_me_pp = tmp_serving_and_me_pp
+            serving_process.kill()
+            serving_and_me_pp.close_read()
+            self.pipe_files.clear_a_pipe(serving_and_me_pp)
 
-                if cache_and_me_pp:
-                    cache_and_me_pp.open_write_nonblock()
-                    cache_and_me_pp.write_int(RESET_CACHE_END)
-                    cache_and_me_pp.close_write()
-                    logger.info('reset cache finish')
+            serving_process = tmp_serving_process
+            serving_and_me_pp = tmp_serving_and_me_pp
+
+            if cache_and_me_pp:
+                cache_and_me_pp.open_write_nonblock()
+                cache_and_me_pp.write_int(RESET_CACHE_END)
+                cache_and_me_pp.close_write()
+                logger.info('reset cache finish')
 
