@@ -216,7 +216,7 @@ class ReversiEnv:
 
     @property
     def cob_dtype(self):
-        return np.unit64
+        return np.uint64
 
     @staticmethod
     def compress_ob(ob):
