@@ -59,7 +59,7 @@ class GrpcClient:
         self.stub.report_resign_false_positive(resign_fp)
 
     def ask_resign_v(self):
-        self.stub.ask_resign_v(chunk_pb2.Empty())
+        return self.stub.ask_resign_v(chunk_pb2.Empty())
 
 
 class GrpcServer(chunk_pb2_grpc.FileServerServicer):
