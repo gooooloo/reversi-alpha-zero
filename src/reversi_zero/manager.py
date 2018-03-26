@@ -92,14 +92,6 @@ def create_parser():
 def args_to_opts(args):
     opts = Options()
 
-    if args.config_file is not None:
-        with open(args.config_file, 'rt') as f:
-            d = json.load(f)
-            for k,v in d.items():
-                if v is not None and hasattr(opts, k):
-                    setattr(opts, k, v)
-
-    # overwrite what was set from config_file
     if args.ask_model is not None: opts.ask_model = args.ask_model
     if args.can_resign is not None: opts.can_resign = args.can_resign
     if args.cmd is not None: opts.cmd = args.cmd
@@ -144,6 +136,13 @@ def args_to_opts(args):
         else:
             opts.p1_first = str2bool(args.p1_first)
 
+    # overwrite what was set from config_file
+    if args.config_file is not None:
+        with open(args.config_file, 'rt') as f:
+            d = json.load(f)
+            for k,v in d.items():
+                if v is not None and hasattr(opts, k):
+                    setattr(opts, k, v)
     return opts
 
 
