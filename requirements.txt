@@ -11,6 +11,7 @@ click>=6.7
 cycler>=0.10.0
 decorator>=4.1.2
 entrypoints>=0.2.3
+grpcio
 grpcio-tools
 h5py>=2.7.1
 html5lib>=0.9999999
