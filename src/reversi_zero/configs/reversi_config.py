@@ -17,10 +17,12 @@ class PlayDataConfig:
         # If I am having selfplay speed: 2.5 seconds per game, then that implies 100,000 recent games.
         # If I am having selfplay speed: 5 seconds per game, then that implies 50,000 recent games.
         #
+        # If I am having training speed: 1.8 seconds per 3072 positions, that implies ~64,450 seconds (about 18 hours).
+        # If I am having selfplay speed: 15 seconds per game, then that implies 4,300 recent games, or ~220,000 moves.
+        #
         # Small nb_game_in_file make training data update more frequently,
-        # Large max_file_num make larger overhead reading file
         self.nb_move_in_file = 300          # MOKE: N/A
-        self.max_file_num = 10000           # MOKE: 2000
+        self.max_file_num = 733             # MOKE: N/A
 
 
 class PlayConfig:
