@@ -12,11 +12,11 @@ def _data_dir(env):
 class Config:
     def __init__(self, opts):
         if opts.env == 'reversi':
-            from .configs import reversi_config as env_specific
+            from src.reversi_zero.env.reversi import reversi_config as env_specific
         elif opts.env == 'reversi4x4':
-            from .configs import reversi4x4_config as env_specific
+            from src.reversi_zero.env.reversi4x4 import reversi4x4_config as env_specific
         elif opts.env == 'reversi6x6':
-            from .configs import reversi6x6_config as env_specific
+            from src.reversi_zero.env.reversi6x6 import reversi6x6_config as env_specific
         else:
             raise Exception(f"unknown env: {opts.env}")
 

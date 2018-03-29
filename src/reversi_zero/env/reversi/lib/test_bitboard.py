@@ -3,6 +3,59 @@ from nose.tools.trivial import ok_, eq_
 from reversi_zero.lib.bitboard import find_correct_moves, board_to_string
 from reversi_zero.lib.util import parse_to_bitboards
 
+def parse_to_bitboards(string: str):
+    lines = string.strip().split("\n")
+    black = 0
+    white = 0
+    y = 0
+
+    for line in [l.strip() for l in lines]:
+        if line[:2] == '##':
+            continue
+        for i, ch in enumerate(line[1:9]):
+            if ch == 'O':
+                black |= 1 << (y*8+i)
+            elif ch == 'X':
+                white |= 1 << (y*8+i)
+        y += 1
+
+    return black, white
+
+
+def test_parse_to_bitboards_init():
+    ex = '''
+    ##########
+    #        #
+    #        #
+    #        #
+    #   OX   #
+    #   XO   #
+    #        #
+    #        #
+    #        #
+    ##########
+    '''
+
+    black, white = util.parse_to_bitboards(ex)
+    eq_(black, 0b00001000 << 24 | 0b00010000 << 32, f"{ex}\n-------\n{board_to_string(black, white)}")
+    eq_(white, 0b00010000 << 24 | 0b00001000 << 32, f"{ex}\n-------\n{board_to_string(black, white)}")
+
+
+def test_parse_to_bitboards():
+    ex = '''
+##########
+#OO      #
+#XOO     #
+#OXOOO   #
+#  XOX   #
+#   XXX  #
+#  X     #
+# X      #
+#       X#
+##########'''
+
+    black, white = util.parse_to_bitboards(ex)
+    eq_(ex.strip(), board_to_string(black, white).strip(), f"{ex}\n-------\n{board_to_string(black, white)}")
 
 def test_find_correct_moves_1():
     ex = '''

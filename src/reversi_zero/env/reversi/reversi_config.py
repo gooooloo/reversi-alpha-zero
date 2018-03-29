@@ -92,7 +92,7 @@ class PlayWithHumanConfig:
 class EnvSpecificConfig:
     def __init__(self):
         self.env_arg_name = "reversi"
-        self.env_module_name = "reversi_zero.env.reversi_env"
+        self.env_module_name = "src.reversi_zero.env.reversi.reversi_env"
         self.env_class_name = "ReversiEnv"
         self.board_edge_size = 8
 

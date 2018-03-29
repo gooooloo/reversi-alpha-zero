@@ -1,8 +1,8 @@
 import os
 from datetime import datetime
 
+from src.reversi_zero.env.reversi.lib.nboard import v_2_b
 from src.reversi_zero.lib import gtp
-from src.reversi_zero.lib.nboard import v_2_b
 
 
 class GGF:

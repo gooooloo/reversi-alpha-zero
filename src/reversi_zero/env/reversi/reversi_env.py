@@ -3,7 +3,9 @@ from collections import deque
 from logging import getLogger
 
 import numpy as np
-from src.reversi_zero.lib.bitboard import board_to_string, calc_flip, bit_count, find_correct_moves, bit_to_array
+
+from src.reversi_zero.env.ienv import IEnv
+from src.reversi_zero.env.reversi.lib.bitboard import board_to_string, calc_flip, bit_count, find_correct_moves, bit_to_array
 
 logger = getLogger(__name__)
 # noinspection PyArgumentList
@@ -16,7 +18,7 @@ def another_player(player):
     return Player.white if player == Player.black else Player.black
 
 
-class ReversiEnv:
+class ReversiEnv(IEnv):
     def __init__(self):
 
         self.board = None
@@ -218,7 +220,6 @@ class ReversiEnv:
     def cob_dtype(self):
         return np.uint64
 
-    @staticmethod
     def compress_ob(ob):
         cob = np.ndarray([len(ob)], dtype=np.uint64)
         for idx,plane in enumerate(ob):
@@ -231,7 +232,6 @@ class ReversiEnv:
 
         return cob
 
-    @staticmethod
     def decompress_ob(cob):
 
         ob = np.ndarray([len(cob), 8, 8], dtype=np.uint8)

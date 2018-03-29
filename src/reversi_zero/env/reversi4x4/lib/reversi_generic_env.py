@@ -4,6 +4,8 @@ from logging import getLogger
 
 import numpy as np
 
+from src.reversi_zero.env.ienv import IEnv
+
 logger = getLogger(__name__)
 
 EMPTY = 0
@@ -31,7 +33,7 @@ def same_players(p1, p2):
     return p1 == p2
 
 
-class ReversiGenericEnv:
+class ReversiGenericEnv(IEnv):
     def __init__(self, edge_size, board_history_max_len):
 
         self.EDGE_SIZE = edge_size
@@ -276,14 +278,17 @@ class ReversiGenericEnv:
 
         return ob
 
-
-    def compress_ob(self, ob):
+    @property
+    def cob_dtype(self):
         if self.BOARD_SIZE <= 16:
-            dtype = np.uint16
+            return np.uint16
         elif self.BOARD_SIZE <= 64:
-            dtype = np.uint64
+            return np.uint64
         else:
             raise Exception("not supported yet!")
+
+    def compress_ob(self, ob):
+        dtype = self.cob_dtype
 
         cob = np.ndarray([len(ob)], dtype=dtype)
         for idx,plane in enumerate(ob):
@@ -368,12 +373,3 @@ class ReversiGenericEnv:
         new_pi = np.append(part_pi[0], pi[-1])
         assert len(new_pi) == len(pi)
         return new_pi
-
-
-class Reversi4x4Env(ReversiGenericEnv):
-    def __init__(self):
-        super(Reversi4x4Env, self).__init__(edge_size=4, board_history_max_len=1)
-
-class Reversi6x6Env(ReversiGenericEnv):
-    def __init__(self):
-        super(Reversi6x6Env, self).__init__(edge_size=6, board_history_max_len=2)

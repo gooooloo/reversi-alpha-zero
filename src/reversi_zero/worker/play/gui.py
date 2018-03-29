@@ -6,7 +6,7 @@ import wx
 from wx.core import CommandEvent
 
 from src.reversi_zero.config import Config
-from src.reversi_zero.env.reversi_env import Player
+from src.reversi_zero.env.reversi.reversi_env import Player
 from src.reversi_zero.lib.model_helpler import ask_model_dir
 from src.reversi_zero.worker.play.game_model import PlayWithHuman, GameEvent
 
