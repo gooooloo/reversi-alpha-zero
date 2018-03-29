@@ -102,10 +102,6 @@ class ReversiGenericEnv(IEnv):
     def black_loses(self):
         return self.done and self.winner == WHITE
 
-    @property
-    def next_is_black(self):
-        return self.next_player == BLACK
-
     def color_of_vertex(self, r, c):
         if self.board[r][c] == BLACK:
             return 'black'

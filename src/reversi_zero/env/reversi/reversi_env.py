@@ -74,10 +74,6 @@ class ReversiEnv(IEnv):
         return self.done and self.winner == another_player(Player.black)
 
     @property
-    def next_is_black(self):
-        return self.next_player == Player.black
-
-    @property
     def legal_moves(self):
         own, enemy = self.get_own_and_enemy()
         bit = find_correct_moves(own, enemy)

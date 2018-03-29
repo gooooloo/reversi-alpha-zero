@@ -21,9 +21,6 @@ class IEnv:
     def legal_moves(self): raise Exception("not yet implemented")
 
     @property
-    def next_is_black(self): raise Exception("not yet implemented")
-
-    @property
     def observation(self): raise Exception("not yet implemented")
 
     @property
