@@ -2,9 +2,6 @@ import errno
 import json
 import os
 import random
-import signal
-
-import sys
 
 import time
 

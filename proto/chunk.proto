@@ -3,8 +3,12 @@ syntax = "proto3";
 
 service FileServer {
   rpc upload_play_data(stream Move) returns (Empty) {}
-  rpc download_model_config(ModelGeneration) returns (stream Chunk) {}
-  rpc download_model_weight(ModelGeneration) returns (stream Chunk) {}
+  rpc list_model_steps_to_eval(Empty) returns (stream ModelStep) {}
+  rpc list_model_steps_archive(Empty) returns (stream ModelStep) {}
+  rpc download_model_config(ModelStep) returns (stream Chunk) {}
+  rpc download_model_weight(ModelStep) returns (stream Chunk) {}
+  rpc report_better_model(ModelStep) returns (stream Chunk) {}
+  rpc remove_model(ModelStep) returns (stream Chunk) {}
   rpc report_resign_false_positive(ResignFalsePositive) returns (Empty) {}
   rpc ask_resign_v(Empty) returns (ResignV) {}
 }
@@ -23,8 +27,9 @@ message Move {
 message Empty {
 }
 
-message ModelGeneration{
-  int32 generation = 1;
+message ModelStep{
+  string type = 1;
+  int32 step = 2;
 }
 
 message ResignFalsePositive {

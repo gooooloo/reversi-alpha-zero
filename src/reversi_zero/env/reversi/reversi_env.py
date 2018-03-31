@@ -24,7 +24,7 @@ class ReversiEnv(IEnv):
         self.board = None
         self.next_player = None  # type: Player
         self.turn = 0
-        self.done = False
+        self._done = False
         self.winner = None  # type: Player
         self._board_history = deque(maxlen=2)
         for _ in range(self._board_history.maxlen):
@@ -34,7 +34,7 @@ class ReversiEnv(IEnv):
         self.board = Board()
         self.next_player = Player.black
         self.turn = 0
-        self.done = False
+        self._done = False
         self.winner = None
         self._board_history.clear()
         for _ in range(self._board_history.maxlen):
@@ -46,7 +46,7 @@ class ReversiEnv(IEnv):
         ret.board = self.board.copy() if self.board is not None else None
         ret.next_player = self.next_player
         ret.turn = self.turn
-        ret.done = self.done
+        ret._done = self._done
         ret.winner = self.winner
         ret._board_history = deque(maxlen=self._board_history.maxlen)
         for i in self._board_history:
@@ -59,19 +59,19 @@ class ReversiEnv(IEnv):
 
     @property
     def last_player_wins(self):
-        return self.done and self.winner == self.last_player
+        return self._done and self.winner == self.last_player
 
     @property
     def last_player_loses(self):
-        return self.done and self.winner == another_player(self.last_player)
+        return self._done and self.winner == another_player(self.last_player)
 
     @property
     def black_wins(self):
-        return self.done and self.winner == Player.black
+        return self._done and self.winner == Player.black
 
     @property
     def black_loses(self):
-        return self.done and self.winner == another_player(Player.black)
+        return self._done and self.winner == another_player(Player.black)
 
     @property
     def legal_moves(self):
@@ -89,7 +89,7 @@ class ReversiEnv(IEnv):
         return self.board.equals(r.board) and \
                self.next_player == r.next_player and \
                self.turn == r.turn and \
-               self.done == r.done and \
+               self._done == r._done and \
                self.winner == r.winner and \
                self._board_history.equals(r._board_history)
 
@@ -141,8 +141,12 @@ class ReversiEnv(IEnv):
             return bit_count(find_correct_moves(enemy, own)) == 0 and \
                    bit_count(find_correct_moves(own, enemy)) == 0
 
+    @property
+    def done(self):
+        return self._done
+
     def _game_over(self):
-        self.done = True
+        self._done = True
         if self.winner is None:
             black_num, white_num = self.board.number_of_black_and_white
             if black_num > white_num:

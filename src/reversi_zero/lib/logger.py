@@ -8,8 +8,3 @@ def setup_logger(log_filename):
     stream_handler.setFormatter(Formatter(format_str))
     getLogger().addHandler(stream_handler)
 
-
-if __name__ == '__main__':
-    setup_logger("aa.log")
-    logger = getLogger("test")
-    logger.info("OK")

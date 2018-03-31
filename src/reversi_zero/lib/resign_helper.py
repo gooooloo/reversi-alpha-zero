@@ -1,12 +1,11 @@
 import json
 import os
-from logging import getLogger, WARNING
+from logging import getLogger
 from random import random
 
 from src.reversi_zero.lib.chunk_pb2 import ResignFalsePositive, ResignV
 
 logger = getLogger(__name__)
-getLogger('requests.packages.urllib3.connectionpool').setLevel(WARNING)
 
 
 def decide_resign_v_once(config):
@@ -48,8 +47,8 @@ def _compute_new_v(config, v, fp):
     v_resign_delta = config.play.v_resign_delta
     fraction_t_max = config.play.v_resign_false_positive_fraction_t_max
     fraction_t_min = config.play.v_resign_false_positive_fraction_t_min
-    max_v = 0.95
-    min_v = -0.95
+    max_v = 1
+    min_v = -1
 
     new_v = v
     n, f_p_n = fp.n, fp.f_p_n

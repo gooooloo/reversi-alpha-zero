@@ -7,8 +7,8 @@ class PlayDataConfig:
     def __init__(self):
         # This is about how FRESH training data is.
         #
-        # AGZ paper says: "... from the most recent 500,000 games of self-play."
-        # "... 40 days ... 29 million games of self-play ... 3.1 million mini-batches of 2,048 positions each"
+        # AGZ paper says: "... from the most recent 500,000 games of self-eval."
+        # "... 40 days ... 29 million games of self-eval ... 3.1 million mini-batches of 2,048 positions each"
         # 29,000,000 games time equals to 6,348,800,000 trained position time.
         #    500,000 games time equals to   110,000,000 trained position time.
         # Says, the FRESHNESS is: no more than 110,000,000 trained positions old.
@@ -79,44 +79,17 @@ class ModelConfig:
     policy_size = 8*8+1
 
 
-class PlayWithHumanConfig:
-    def __init__(self):
-        self.noise_eps = 0
-        self.change_tau_turn = 0
-
-    def update_play_config(self, pc):
-        pc.noise_eps = self.noise_eps
-        pc.change_tau_turn = self.change_tau_turn
-
-
 class EnvSpecificConfig:
     def __init__(self):
-        self.env_arg_name = "reversi"
         self.env_module_name = "src.reversi_zero.env.reversi.reversi_env"
         self.env_class_name = "ReversiEnv"
         self.board_edge_size = 8
 
 
-class GuiConfig:
-    def __init__(self):
-        self.window_size = (400, 440)
-        self.window_title = "reversi-alpha-zero"
-        self.EDGE_LENGTH = 8
-        self.x_is_vertical = False
-
-
 class EvalConfig:
     def __init__(self):
-        self.elo_k = 32
         self.n_games = 400
-        self.elo_threshold = 150
-
-
-class TimeConfig:
-    def __init__(self):
-        self.whole_move_num = 60
-        self.endgame_move_num = 20
-        self.decay_factor = 0.9
+        self.win_lose_delta_threshold = 10
 
 
 class ModelCacheConfig:

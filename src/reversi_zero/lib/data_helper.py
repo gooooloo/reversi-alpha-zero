@@ -43,7 +43,7 @@ def read_game_data_from_file(path):
 def save_play_data(rc, moves):
     game_id = datetime.now().strftime("%Y%m%d-%H%M%S.%f")
     path = os.path.join(rc.play_data_dir, rc.play_data_filename_tmpl % game_id)
-    logger.info(f"save play data to {path}")
+    logger.info(f"save eval data to {path}")
 
     with open(path, 'wb') as f:
         f.write(_VarintBytes(len(moves)))

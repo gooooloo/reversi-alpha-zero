@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='chunk.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\x0b\x63hunk.proto\"\x17\n\x05\x43hunk\x12\x0e\n\x06\x62uffer\x18\x01 \x01(\x0c\"=\n\x04Move\x12\x0b\n\x03\x63ob\x18\x01 \x01(\x0c\x12\n\n\x02pi\x18\x02 \x01(\x0c\x12\t\n\x01z\x18\x03 \x01(\x05\x12\x11\n\tcob_dtype\x18\x04 \x01(\x05\"\x07\n\x05\x45mpty\"%\n\x0fModelGeneration\x12\x12\n\ngeneration\x18\x01 \x01(\x05\"/\n\x13ResignFalsePositive\x12\t\n\x01n\x18\x01 \x01(\x05\x12\r\n\x05\x66_p_n\x18\x02 \x01(\x05\"+\n\x07ResignV\x12\x15\n\rshould_resign\x18\x01 \x01(\x05\x12\t\n\x01v\x18\x02 \x01(\x02\x32\x85\x02\n\nFileServer\x12%\n\x10upload_play_data\x12\x05.Move\x1a\x06.Empty\"\x00(\x01\x12\x35\n\x15\x64ownload_model_config\x12\x10.ModelGeneration\x1a\x06.Chunk\"\x00\x30\x01\x12\x35\n\x15\x64ownload_model_weight\x12\x10.ModelGeneration\x1a\x06.Chunk\"\x00\x30\x01\x12>\n\x1creport_resign_false_positive\x12\x14.ResignFalsePositive\x1a\x06.Empty\"\x00\x12\"\n\x0c\x61sk_resign_v\x12\x06.Empty\x1a\x08.ResignV\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x0b\x63hunk.proto\"\x17\n\x05\x43hunk\x12\x0e\n\x06\x62uffer\x18\x01 \x01(\x0c\"=\n\x04Move\x12\x0b\n\x03\x63ob\x18\x01 \x01(\x0c\x12\n\n\x02pi\x18\x02 \x01(\x0c\x12\t\n\x01z\x18\x03 \x01(\x05\x12\x11\n\tcob_dtype\x18\x04 \x01(\x05\"\x07\n\x05\x45mpty\"\'\n\tModelStep\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0c\n\x04step\x18\x02 \x01(\x05\"/\n\x13ResignFalsePositive\x12\t\n\x01n\x18\x01 \x01(\x05\x12\r\n\x05\x66_p_n\x18\x02 \x01(\x05\"+\n\x07ResignV\x12\x15\n\rshould_resign\x18\x01 \x01(\x05\x12\t\n\x01v\x18\x02 \x01(\x02\x32\xb8\x03\n\nFileServer\x12%\n\x10upload_play_data\x12\x05.Move\x1a\x06.Empty\"\x00(\x01\x12\x32\n\x18list_model_steps_to_eval\x12\x06.Empty\x1a\n.ModelStep\"\x00\x30\x01\x12\x32\n\x18list_model_steps_archive\x12\x06.Empty\x1a\n.ModelStep\"\x00\x30\x01\x12/\n\x15\x64ownload_model_config\x12\n.ModelStep\x1a\x06.Chunk\"\x00\x30\x01\x12/\n\x15\x64ownload_model_weight\x12\n.ModelStep\x1a\x06.Chunk\"\x00\x30\x01\x12-\n\x13report_better_model\x12\n.ModelStep\x1a\x06.Chunk\"\x00\x30\x01\x12&\n\x0cremove_model\x12\n.ModelStep\x1a\x06.Chunk\"\x00\x30\x01\x12>\n\x1creport_resign_false_positive\x12\x14.ResignFalsePositive\x1a\x06.Empty\"\x00\x12\"\n\x0c\x61sk_resign_v\x12\x06.Empty\x1a\x08.ResignV\"\x00\x62\x06proto3')
 )
 
 
@@ -132,16 +132,23 @@ _EMPTY = _descriptor.Descriptor(
 )
 
 
-_MODELGENERATION = _descriptor.Descriptor(
-  name='ModelGeneration',
-  full_name='ModelGeneration',
+_MODELSTEP = _descriptor.Descriptor(
+  name='ModelStep',
+  full_name='ModelStep',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='generation', full_name='ModelGeneration.generation', index=0,
-      number=1, type=5, cpp_type=1, label=1,
+      name='type', full_name='ModelStep.type', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='step', full_name='ModelStep.step', index=1,
+      number=2, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -159,7 +166,7 @@ _MODELGENERATION = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=112,
-  serialized_end=149,
+  serialized_end=151,
 )
 
 
@@ -196,8 +203,8 @@ _RESIGNFALSEPOSITIVE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=151,
-  serialized_end=198,
+  serialized_start=153,
+  serialized_end=200,
 )
 
 
@@ -234,14 +241,14 @@ _RESIGNV = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=200,
-  serialized_end=243,
+  serialized_start=202,
+  serialized_end=245,
 )
 
 DESCRIPTOR.message_types_by_name['Chunk'] = _CHUNK
 DESCRIPTOR.message_types_by_name['Move'] = _MOVE
 DESCRIPTOR.message_types_by_name['Empty'] = _EMPTY
-DESCRIPTOR.message_types_by_name['ModelGeneration'] = _MODELGENERATION
+DESCRIPTOR.message_types_by_name['ModelStep'] = _MODELSTEP
 DESCRIPTOR.message_types_by_name['ResignFalsePositive'] = _RESIGNFALSEPOSITIVE
 DESCRIPTOR.message_types_by_name['ResignV'] = _RESIGNV
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -267,12 +274,12 @@ Empty = _reflection.GeneratedProtocolMessageType('Empty', (_message.Message,), d
   ))
 _sym_db.RegisterMessage(Empty)
 
-ModelGeneration = _reflection.GeneratedProtocolMessageType('ModelGeneration', (_message.Message,), dict(
-  DESCRIPTOR = _MODELGENERATION,
+ModelStep = _reflection.GeneratedProtocolMessageType('ModelStep', (_message.Message,), dict(
+  DESCRIPTOR = _MODELSTEP,
   __module__ = 'chunk_pb2'
-  # @@protoc_insertion_point(class_scope:ModelGeneration)
+  # @@protoc_insertion_point(class_scope:ModelStep)
   ))
-_sym_db.RegisterMessage(ModelGeneration)
+_sym_db.RegisterMessage(ModelStep)
 
 ResignFalsePositive = _reflection.GeneratedProtocolMessageType('ResignFalsePositive', (_message.Message,), dict(
   DESCRIPTOR = _RESIGNFALSEPOSITIVE,
@@ -296,8 +303,8 @@ _FILESERVER = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=246,
-  serialized_end=507,
+  serialized_start=248,
+  serialized_end=688,
   methods=[
   _descriptor.MethodDescriptor(
     name='upload_play_data',
@@ -309,27 +316,63 @@ _FILESERVER = _descriptor.ServiceDescriptor(
     options=None,
   ),
   _descriptor.MethodDescriptor(
-    name='download_model_config',
-    full_name='FileServer.download_model_config',
+    name='list_model_steps_to_eval',
+    full_name='FileServer.list_model_steps_to_eval',
     index=1,
     containing_service=None,
-    input_type=_MODELGENERATION,
+    input_type=_EMPTY,
+    output_type=_MODELSTEP,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='list_model_steps_archive',
+    full_name='FileServer.list_model_steps_archive',
+    index=2,
+    containing_service=None,
+    input_type=_EMPTY,
+    output_type=_MODELSTEP,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='download_model_config',
+    full_name='FileServer.download_model_config',
+    index=3,
+    containing_service=None,
+    input_type=_MODELSTEP,
     output_type=_CHUNK,
     options=None,
   ),
   _descriptor.MethodDescriptor(
     name='download_model_weight',
     full_name='FileServer.download_model_weight',
-    index=2,
+    index=4,
     containing_service=None,
-    input_type=_MODELGENERATION,
+    input_type=_MODELSTEP,
+    output_type=_CHUNK,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='report_better_model',
+    full_name='FileServer.report_better_model',
+    index=5,
+    containing_service=None,
+    input_type=_MODELSTEP,
+    output_type=_CHUNK,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='remove_model',
+    full_name='FileServer.remove_model',
+    index=6,
+    containing_service=None,
+    input_type=_MODELSTEP,
     output_type=_CHUNK,
     options=None,
   ),
   _descriptor.MethodDescriptor(
     name='report_resign_false_positive',
     full_name='FileServer.report_resign_false_positive',
-    index=3,
+    index=7,
     containing_service=None,
     input_type=_RESIGNFALSEPOSITIVE,
     output_type=_EMPTY,
@@ -338,7 +381,7 @@ _FILESERVER = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='ask_resign_v',
     full_name='FileServer.ask_resign_v',
-    index=4,
+    index=8,
     containing_service=None,
     input_type=_EMPTY,
     output_type=_RESIGNV,

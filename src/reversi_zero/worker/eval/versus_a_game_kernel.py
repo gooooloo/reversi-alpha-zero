@@ -1,11 +1,10 @@
+import copy
+import importlib
 from logging import getLogger
 
-import copy
-
 from src.reversi_zero.config import Config
-from src.reversi_zero.lib import gtp
-from src.reversi_zero.lib.ggf import GGF
-from src.reversi_zero.lib.gtp import GTPClient
+from src.reversi_zero.lib import ggf
+from src.reversi_zero.lib.gtp_helper import GTPClient
 from src.reversi_zero.lib.pipe_helper import PipeFilesManager
 from src.reversi_zero.lib.proc_helper import build_child_cmd, start_child_proc
 
@@ -25,8 +24,8 @@ class VersusPlayWorkerBase:
         self.p1_pipe_pair = self.config.opts.pipe_pairs[1]
         self.p2_pipe_pair = self.config.opts.pipe_pairs[2]
         self.pipe_files = PipeFilesManager.new_one(self.config)
-        self.p1_name = self.config.opts.p1_name
-        self.p2_name = self.config.opts.p2_name
+        self.p1_name = self.config.opts.p1_model_step
+        self.p2_name = self.config.opts.p2_model_step
 
     def start_p1_server(self, gtp_pipe_pair):
         raise Exception('not implemented yet')
@@ -52,24 +51,32 @@ class VersusPlayWorkerBase:
         black.clear_board()
         white.clear_board()
 
-        ggf = GGF(black_name=black_name, white_name=white_name)
+        class_attr = getattr(importlib.import_module(self.config.env.env_module_name), self.config.env.env_class_name)
+        env = class_attr()
+        env.reset()
+
+        ggf = env.new_ggf()
+        ggf.set_black_name(black_name)
+        ggf.set_white_name(white_name)
+
         next_is_black = True
         while True:
             if next_is_black:
-                vertex = black.genmove(gtp.BLACK)
-                white.play(gtp.BLACK, vertex)
-                ggf.play(gtp.BLACK, vertex)
+                action = black.think()
+                white.play(action)
+                ggf.play(ggf.BLACK, action)
+                env.step(action)
             else:
-                vertex = white.genmove(gtp.WHITE)
-                black.play(gtp.WHITE, vertex)
-                ggf.play(gtp.WHITE, vertex)
+                action = white.think()
+                black.play(action)
+                ggf.play(ggf.WHITE, action)
+                env.step(action)
 
             next_is_black = not next_is_black
-            over = p1.is_over()
-            if over:
+            if env.done:
                 break
 
-        final_score = p1.final_score()
+        final_score = env.score
         ggf.set_final_score(final_score)
 
         if self.config.opts.save_versus_dir:
@@ -84,14 +91,9 @@ class VersusPlayWorkerBase:
         else:
             p1, p2 = white, black
 
-        if p1 > p2:
-            final_score = 'win'
-        elif p1 < p2:
-            final_score = 'lose'
-        else:
-            final_score = 'draw'
         self.parent_pipe_pair.open_write_nonblock()
-        self.parent_pipe_pair.write(f'{final_score}'.encode())
+        self.parent_pipe_pair.write_int(p1)
+        self.parent_pipe_pair.write_int(p2)
         self.parent_pipe_pair.close_write()
 
 
@@ -102,7 +104,7 @@ class VersusPlayWorker(VersusPlayWorkerBase):
     @staticmethod
     def start_gtp_server_process(pipe_pairs, config):
         cmd = build_child_cmd(type='gtp_server', opts=config.opts, pipe_pairs=pipe_pairs)
-        return start_child_proc(cmd=cmd, nocuda=True)
+        return start_child_proc(cmd=cmd)
 
     def start_p1_server(self, gtp_pipe_pair):
         if self.config.opts.p1_n_sims is not None:

@@ -69,10 +69,10 @@ class PlayWithHumanConfig:
 
 class EnvSpecificConfig:
     def __init__(self):
-        self.env_arg_name = "reversi4x4"
         self.env_module_name = "src.reversi_zero.env.reversi4x4.reversi4x4_env"
         self.env_class_name = "Reversi4x4Env"
         self.board_edge_size = 4
+
 
 class GuiConfig:
     def __init__(self):
@@ -84,9 +84,8 @@ class GuiConfig:
 
 class EvalConfig:
     def __init__(self):
-        self.elo_k = 32
         self.n_games = 400
-        self.elo_threshold = 150  # #win - #lose ~= 10
+        self.win_lose_delta_threshold = 10
 
 
 class TimeConfig:

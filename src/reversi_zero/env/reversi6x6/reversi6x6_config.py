@@ -55,44 +55,17 @@ class ModelConfig:
     policy_size = 1+6*6
 
 
-class PlayWithHumanConfig:
-    def __init__(self):
-        self.noise_eps = 0
-        self.change_tau_turn = 0
-
-    def update_play_config(self, pc):
-        pc.noise_eps = self.noise_eps
-        pc.change_tau_turn = self.change_tau_turn
-
-
 class EnvSpecificConfig:
     def __init__(self):
-        self.env_arg_name = "reversi6x6"
         self.env_module_name = "src.reversi_zero.env.reversi6x6.reversi6x6_env"
         self.env_class_name = "Reversi6x6Env"
         self.board_edge_size = 6
 
 
-class GuiConfig:
-    def __init__(self):
-        self.window_size = (400, 440)
-        self.window_title = "reverse-6x6-alpha-zero"
-        self.EDGE_LENGTH = 6
-        self.x_is_vertical = True
-
-
 class EvalConfig:
     def __init__(self):
-        self.elo_k = 32
         self.n_games = 400
-        self.elo_threshold = 300
-
-
-class TimeConfig:
-    def __init__(self):
-        self.whole_move_num = 32
-        self.endgame_move_num = 10
-        self.decay_factor = 0.9
+        self.win_lose_delta_threshold = 10
 
 
 class ModelCacheConfig:

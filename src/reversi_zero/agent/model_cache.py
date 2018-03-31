@@ -74,7 +74,7 @@ class ModelCacheServer:
 
         self.allow_suggest = True
 
-    def serve(self):
+    def start(self):
 
         self.parent_pipe_pair.open_read_nonblock()
         for pp in self.pipe_pairs:

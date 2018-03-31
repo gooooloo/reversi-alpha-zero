@@ -33,14 +33,11 @@ class SelfWorker:
 
     def start_model_serving_process(self, pipe_pairs):
         cmd = build_child_cmd(type='model_serving', opts=self.config.opts, pipe_pairs=pipe_pairs)
-        return start_child_proc(cmd=cmd)
+        return start_child_proc(cmd=cmd, gpu=True)
 
     def start_a_self_play_process(self, pipe_pairs):
-        import copy
-        opts = copy.copy(self.config.opts)
-        opts.n_games = 99999999999
-        cmd = build_child_cmd(type='self_play_kernel', opts=opts, pipe_pairs=pipe_pairs)
-        return start_child_proc(cmd=cmd, nocuda=True)
+        cmd = build_child_cmd(type='self_play_kernel', opts=self.config.opts, pipe_pairs=pipe_pairs)
+        return start_child_proc(cmd=cmd)
 
     def start(self):
 

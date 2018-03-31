@@ -11,7 +11,6 @@ from keras.optimizers import SGD
 
 from src.reversi_zero.agent.model import ReversiModel, objective_function_for_policy, objective_function_for_value
 from src.reversi_zero.config import Config
-from src.reversi_zero.lib import chunk_pb2
 from src.reversi_zero.lib import tf_util
 from src.reversi_zero.lib.data_helper import get_game_data_filenames, read_game_data_from_file, \
     save_unloaded_data_count, load_unloaded_data_count
@@ -76,7 +75,7 @@ class OptimizeWorker:
 
     def training(self):
         self.compile_model()
-        last_generation_step = last_save_step = 0
+        last_archive_step = last_save_step = 0
         min_data_size_to_learn = self.config.trainer.min_data_size_to_learn
         self.load_play_data()
 
@@ -90,10 +89,13 @@ class OptimizeWorker:
             steps = self.train_epoch()
             self.total_steps += steps
 
-            if not self.config.trainer.need_eval:
-                if last_generation_step + self.config.trainer.generation_model_steps <= self.total_steps:
-                    self.save_current_model_as_generation()
-                    last_generation_step = self.total_steps
+            if last_archive_step + self.config.trainer.archive_model_steps <= self.total_steps:
+                if self.config.trainer.need_eval:
+                    pass
+                else:
+                    self.save_current_model_as_archive()
+
+                last_archive_step = self.total_steps
 
             if last_save_step + self.config.trainer.save_model_steps <= self.total_steps:
                 if self.config.trainer.need_eval:
@@ -171,9 +173,9 @@ class OptimizeWorker:
         weight_path = os.path.join(model_dir, rc.model_weight_filename)
         self.model.save(config_path, weight_path, self.total_steps)
 
-    def save_current_model_as_generation(self):
+    def save_current_model_as_archive(self):
         rc = self.config.resource
-        model_dir = os.path.join(rc.generation_model_dir, rc.generation_model_dirname_tmpl % self.total_steps)
+        model_dir = os.path.join(rc.archive_model_dir, rc.archive_model_dirname_tmpl % self.total_steps)
         os.makedirs(model_dir, exist_ok=True)
         config_path = os.path.join(model_dir, rc.model_config_filename)
         weight_path = os.path.join(model_dir, rc.model_weight_filename)

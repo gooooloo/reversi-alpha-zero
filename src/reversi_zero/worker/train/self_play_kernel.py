@@ -42,7 +42,7 @@ class SelfPlayWorker:
             moves, resign_fp = self.play_a_game(resign_v)
 
             end_time = time()
-            logger.debug(f"play game {game_idx} time={end_time - start_time} sec")
+            logger.debug(f"eval game {game_idx} time={end_time - start_time} sec")
 
             self.grpc_client.upload_play_data(iter(moves))
 

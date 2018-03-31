@@ -19,5 +19,5 @@ class ModelCacheWorker:
 
     def start(self):
         cache_server = ModelCacheServer(self.parent_pipe_pair, self.data_pipe_pair, self.config.model_cache.model_cache_size)
-        cache_server.serve()
+        cache_server.start()
 

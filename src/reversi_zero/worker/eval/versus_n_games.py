@@ -33,11 +33,10 @@ class VersusWorkerBase:
 
         self.win_n, self.draw_n, self.lose_n = 0, 0, 0
 
-    def start_model_serving_process(self, model_config_path, model_weight_path, pipe_pairs):
+    def start_model_serving_process(self, model_step, pipe_pairs):
         import copy
         opts = copy.copy(self.config.opts)
-        opts.model_config_path = model_config_path
-        opts.model_weight_path = model_weight_path
+        opts.model_step = model_step
         cmd = build_child_cmd(type='model_serving', opts=opts, pipe_pairs=pipe_pairs)
         return start_child_proc(cmd=cmd)
 
@@ -91,9 +90,10 @@ class VersusWorkerBase:
                     game_index += 1
                     ongoing_games += 1
                 elif info.process and info.process.poll() is not None:  # game process finished.
-                    result = info.result_pipe_pair.read_no_empty().decode()
+                    p1 = info.result_pipe_pair.read_int(allow_empty=False)
+                    p2 = info.result_pipe_pair.read_int(allow_empty=False)
 
-                    self.update_result(result)
+                    self.update_result(p1, p2)
                     logger.info(f'game #{info.index} : p1first:{1 if info.p1_first else 0}, result:{result:4}, '
                                 f'{self.win_n} win, {self.draw_n} draw, {self.lose_n} lose')
 
@@ -107,22 +107,22 @@ class VersusWorkerBase:
 
         if self.parent_pipe_pairs:
             self.parent_pipe_pairs.open_write_nonblock()
-            self.parent_pipe_pairs.write(f'{self.win_n},{self.draw_n},{self.lose_n}'.encode())
+            self.parent_pipe_pairs.write_int(self.win_n)
+            self.parent_pipe_pairs.write_int(self.draw_n)
+            self.parent_pipe_pairs.write_int(self.lose_n)
             self.parent_pipe_pairs.close_write()
         else:
             logger.info(f"{self.win_n} wins, {self.draw_n} draws, {self.lose_n} loses")
 
         self.pipe_files.clear_pipes()
 
-    def update_result(self, result):
-        if result == 'win':
+    def update_result(self, p1, p2):
+        if p1 > p2:
             self.win_n += 1
-        elif result == 'lose':
+        elif p1 < p2:
             self.lose_n += 1
-        elif result == 'draw':
-            self.draw_n += 1
         else:
-            raise Exception(f'unexpected return {result}')
+            self.draw_n += 1
 
 
 class VersusWorker(VersusWorkerBase):
@@ -137,16 +137,14 @@ class VersusWorker(VersusWorkerBase):
         opts.p1_first = p1_first
         cmd = build_child_cmd(type='versus_a_game_kernel', opts=opts, pipe_pairs=pps)
 
-        return start_child_proc(cmd=cmd, nocuda=True)
+        return start_child_proc(cmd=cmd)
 
     def start_model_serving_processes(self, p1_model_ready_pp, p2_model_ready_pp, p1_model_pps, p2_model_pps):
         p1_model_ready_pp.open_read_nonblock()
         p2_model_ready_pp.open_read_nonblock()
-        self.start_model_serving_process(self.config.opts.p1_model_config_path,
-                                         self.config.opts.p1_model_weight_path,
+        self.start_model_serving_process(self.config.opts.p1_model_step,
                                          reverse_in_out([p1_model_ready_pp] + p1_model_pps))
-        self.start_model_serving_process(self.config.opts.p2_model_config_path,
-                                         self.config.opts.p2_model_weight_path,
+        self.start_model_serving_process(self.config.opts.p2_model_step,
                                          reverse_in_out([p2_model_ready_pp] + p2_model_pps))
 
         x = p1_model_ready_pp.read_int(allow_empty=False)
@@ -157,12 +155,12 @@ class VersusWorker(VersusWorkerBase):
         x = p1_model_ready_pp.read_int(allow_empty=False)
         assert x == MODEL_SERVING_STARTED
 
-        x = p1_model_ready_pp.read_int(allow_empty=False)
+        x = p2_model_ready_pp.read_int(allow_empty=False)
         assert x == MODEL_SERVING_READY
-        p1_model_ready_pp.open_write_nonblock()
-        p1_model_ready_pp.write_int(MODEL_SERVING_START)
-        p1_model_ready_pp.close_write()
-        x = p1_model_ready_pp.read_int(allow_empty=False)
+        p2_model_ready_pp.open_write_nonblock()
+        p2_model_ready_pp.write_int(MODEL_SERVING_START)
+        p2_model_ready_pp.close_write()
+        x = p2_model_ready_pp.read_int(allow_empty=False)
         assert x == MODEL_SERVING_STARTED
 
         p1_model_ready_pp.close_read()

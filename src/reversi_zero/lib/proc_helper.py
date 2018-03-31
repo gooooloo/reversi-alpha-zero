@@ -30,18 +30,18 @@ def build_child_cmd(type, opts, pipe_pairs):
         json.dump(opts.__dict__, f)
 
     cmd = ['python3.6', '-m', 'src.reversi_zero.run', type,
-           '--pipe', dump_pipe_pairs_names(pipe_pairs),
+           '--pipe-pairs', dump_pipe_pairs_names(pipe_pairs),
            '--config-file', tmp_config_file_path
            ]
 
     return cmd
 
 
-def start_child_proc(cmd, nocuda=None, stdin=None, stdout=None, stderr=None, cwd=None):
+def start_child_proc(cmd, gpu=None, stdin=None, stdout=None, stderr=None, cwd=None):
     global children_processes
 
     env = os.environ.copy()
-    if nocuda:
+    if not gpu:
         env['CUDA_VISIBLE_DEVICES'] = ''
 
     try:

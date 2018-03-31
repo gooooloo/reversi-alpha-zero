@@ -1,3 +1,6 @@
+from src.reversi_zero.lib.ggf import GGF
+
+
 class IEnv:
     @property
     def black_loses(self): raise Exception("not yet implemented")
@@ -7,6 +10,9 @@ class IEnv:
 
     @property
     def cob_dtype(self): raise Exception("not yet implemented")
+
+    @property
+    def done(self): raise Exception("not yet implemented")
 
     @property
     def last_player(self): raise Exception("not yet implemented")
@@ -54,3 +60,6 @@ class IEnv:
     def rotate_flip_pi(self, pi, op): raise Exception("not yet implemented")
 
     def step(self, action): raise Exception("not yet implemented")
+
+    def new_ggf(self) -> GGF: raise Exception("not yet implemented")
+
