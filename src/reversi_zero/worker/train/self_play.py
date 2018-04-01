@@ -21,7 +21,7 @@ def start(config: Config):
 class SelfWorker:
     def __init__(self, config):
         self.config = config
-        assert not self.config.opts.pipe_pairs
+        assert not self.config.ipc.pipe_pairs
         self.pipe_files = PipeFilesManager.new_one(self.config)
         self.grpc_client = GrpcClient(config)
         if self.config.opts.gpu_mem_frac is not None:
@@ -41,9 +41,9 @@ class SelfWorker:
 
     def start(self):
 
-        pipe_pairs = self.pipe_files.make_pipes(2*self.config.opts.n_workers + 2)
-        serving_pps = pipe_pairs[:self.config.opts.n_workers+1]
-        model_cache_pps = pipe_pairs[self.config.opts.n_workers+1:] if self.config.model_cache.model_cache_size else None
+        pipe_pairs = self.pipe_files.make_pipes(2*self.config.ipc.n_workers + 2)
+        serving_pps = pipe_pairs[:self.config.ipc.n_workers+1]
+        model_cache_pps = pipe_pairs[self.config.ipc.n_workers+1:] if self.config.model_cache.model_cache_size else None
 
         serving_process = self.start_model_serving_process(reverse_in_out(serving_pps))
 

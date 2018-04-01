@@ -21,20 +21,20 @@ def start(config: Config):
 class SelfPlayWorker:
     def __init__(self, config: Config):
         self.config = config
-        assert self.config.opts.pipe_pairs
-        assert len(self.config.opts.pipe_pairs) in (1, 2)
-        self.api_pipe_pair = self.config.opts.pipe_pairs[0]
+        assert self.config.ipc.pipe_pairs
+        assert len(self.config.ipc.pipe_pairs) in (1, 2)
+        self.api_pipe_pair = self.config.ipc.pipe_pairs[0]
         self.api = ReversiModelAPIProxy(self.config, self.api_pipe_pair)
         self.grpc_client = GrpcClient(self.config)
 
-        if len(self.config.opts.pipe_pairs) > 1:
-            self.cache_pipe_pair = self.config.opts.pipe_pairs[1]
+        if len(self.config.ipc.pipe_pairs) > 1:
+            self.cache_pipe_pair = self.config.ipc.pipe_pairs[1]
             self.model_cache = ModelCacheClient(self.cache_pipe_pair)
         else:
             self.model_cache = None
 
     def start(self):
-        for game_idx in range(self.config.opts.n_games):
+        for game_idx in range(9999999999999):
             start_time = time()
 
             resign_v = self.grpc_client.ask_resign_v()

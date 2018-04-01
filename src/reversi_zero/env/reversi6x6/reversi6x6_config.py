@@ -13,9 +13,6 @@ class PlayConfig:
         self.change_tau_turn = 4
         self.virtual_loss = 3
         self.prediction_queue_size = 8
-        self.parallel_search_num = 8
-        self.prediction_worker_sleep_sec  = 0.0001
-        self.wait_for_expanding_sleep_sec = 0.00001
         self.can_resign = True
         self.v_resign_check_min_n = 100
         self.v_resign_init = -0.9
@@ -53,19 +50,23 @@ class ModelConfig:
     value_fc_size = 256
     input_size = (5,6,6)
     policy_size = 1+6*6
+    model_step = None
 
 
 class EnvSpecificConfig:
     def __init__(self):
         self.env_module_name = "src.reversi_zero.env.reversi6x6.reversi6x6_env"
         self.env_class_name = "Reversi6x6Env"
-        self.board_edge_size = 6
 
 
 class EvalConfig:
     def __init__(self):
         self.n_games = 400
         self.win_lose_delta_threshold = 10
+        self.p1_first = None
+        self.p1_model_step = None
+        self.p2_model_step = None
+
 
 
 class ModelCacheConfig:

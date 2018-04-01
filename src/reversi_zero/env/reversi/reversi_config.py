@@ -34,9 +34,6 @@ class PlayConfig:
         self.change_tau_turn = 10           # AZ: 30,               MOKE: same
         self.virtual_loss = 3               # AZ: same,             MOKE: same
         self.prediction_queue_size = 8      # AZ: 8,                MOKE: 16
-        self.parallel_search_num = 8        # AZ: N/A,              MOKE: same
-        self.prediction_worker_sleep_sec  = 0.0001
-        self.wait_for_expanding_sleep_sec = 0.00001
         self.can_resign = True
         self.v_resign_check_min_n = 100
         self.v_resign_init = -0.9           # AZ: UNKNOWN,          MOKE: same
@@ -77,19 +74,22 @@ class ModelConfig:
     value_fc_size = 256
     input_size = (5,8,8)    # AZ: (17,8,8),   MOKE:(3,8,8)
     policy_size = 8*8+1
+    model_step = None
 
 
 class EnvSpecificConfig:
     def __init__(self):
         self.env_module_name = "src.reversi_zero.env.reversi.reversi_env"
         self.env_class_name = "ReversiEnv"
-        self.board_edge_size = 8
 
 
 class EvalConfig:
     def __init__(self):
         self.n_games = 400
         self.win_lose_delta_threshold = 10
+        self.p1_first = None
+        self.p1_model_step = None
+        self.p2_model_step = None
 
 
 class ModelCacheConfig:

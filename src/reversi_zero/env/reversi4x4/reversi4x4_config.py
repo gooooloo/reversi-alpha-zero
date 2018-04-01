@@ -13,9 +13,6 @@ class PlayConfig:
         self.change_tau_turn = 4            # AZ: 30
         self.virtual_loss = 3               # AZ: UNKNOWN
         self.prediction_queue_size = 8      # AZ: 8
-        self.parallel_search_num = 8        # AZ: N/A
-        self.prediction_worker_sleep_sec  = 0.0001
-        self.wait_for_expanding_sleep_sec = 0.00001
         self.can_resign = True
         self.v_resign_check_min_n = 100
         self.v_resign_init = -0.65          # AZ: UNKNOWN
@@ -55,44 +52,22 @@ class ModelConfig:
     value_fc_size = 256
     input_size = (3,4,4)
     policy_size = 1+4*4
-
-
-class PlayWithHumanConfig:
-    def __init__(self):
-        self.noise_eps = 0
-        self.change_tau_turn = 0
-
-    def update_play_config(self, pc):
-        pc.noise_eps = self.noise_eps
-        pc.change_tau_turn = self.change_tau_turn
+    model_step = None
 
 
 class EnvSpecificConfig:
     def __init__(self):
         self.env_module_name = "src.reversi_zero.env.reversi4x4.reversi4x4_env"
         self.env_class_name = "Reversi4x4Env"
-        self.board_edge_size = 4
-
-
-class GuiConfig:
-    def __init__(self):
-        self.window_size = (400, 440)
-        self.window_title = "reversi-4x4-alpha-zero"
-        self.EDGE_LENGTH = 4
-        self.x_is_vertical = True
 
 
 class EvalConfig:
     def __init__(self):
         self.n_games = 400
         self.win_lose_delta_threshold = 10
-
-
-class TimeConfig:
-    def __init__(self):
-        self.whole_move_num = 12
-        self.endgame_move_num = 4
-        self.decay_factor = 0.9
+        self.p1_first = None
+        self.p1_model_step = None
+        self.p2_model_step = None
 
 
 class ModelCacheConfig:

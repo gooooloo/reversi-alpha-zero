@@ -27,8 +27,8 @@ class GameInfo:
 class VersusWorkerBase:
     def __init__(self, config):
         self.config = config
-        assert len(self.config.opts.pipe_pairs) == 1
-        self.parent_pipe_pairs = self.config.opts.pipe_pairs[0]
+        assert len(self.config.ipc.pipe_pairs) == 1
+        self.parent_pipe_pairs = self.config.ipc.pipe_pairs[0]
         self.pipe_files = PipeFilesManager.new_one(self.config)
 
         self.win_n, self.draw_n, self.lose_n = 0, 0, 0
@@ -48,7 +48,7 @@ class VersusWorkerBase:
 
     def start(self):
 
-        n_workers = self.config.opts.n_workers
+        n_workers = self.config.ipc.n_workers
 
         pipe_pairs = self.pipe_files.make_pipes(3 * n_workers + 2)
 
@@ -71,16 +71,16 @@ class VersusWorkerBase:
             ) for i in range(n_workers)
         ]
 
-        unplayed_games = self.config.opts.n_games
+        unplayed_games = self.config.eval.n_games
         ongoing_games = 0
         game_index = 0
         while unplayed_games > 0 or ongoing_games > 0:
             for info in game_info_list:
                 if not info.process and unplayed_games > 0:
                     info.index = game_index
-                    info.p1_first = game_index % 2 == 0 if self.config.opts.p1_first is None \
-                        else True if self.config.opts.p1_first == 'always' \
-                        else False if self.config.opts.p1_first == 'never' \
+                    info.p1_first = game_index % 2 == 0 if self.config.eval.p1_first is None \
+                        else True if self.config.eval.p1_first == 'always' \
+                        else False if self.config.eval.p1_first == 'never' \
                         else None
                     assert info.p1_first is not None, f'--p1-first could only be "always" or "never", or do not use it'
                     pps = copy.copy(info.game_pipe_pair)
@@ -142,9 +142,9 @@ class VersusWorker(VersusWorkerBase):
     def start_model_serving_processes(self, p1_model_ready_pp, p2_model_ready_pp, p1_model_pps, p2_model_pps):
         p1_model_ready_pp.open_read_nonblock()
         p2_model_ready_pp.open_read_nonblock()
-        self.start_model_serving_process(self.config.opts.p1_model_step,
+        self.start_model_serving_process(self.config.eval.p1_model_step,
                                          reverse_in_out([p1_model_ready_pp] + p1_model_pps))
-        self.start_model_serving_process(self.config.opts.p2_model_step,
+        self.start_model_serving_process(self.config.eval.p2_model_step,
                                          reverse_in_out([p2_model_ready_pp] + p2_model_pps))
 
         x = p1_model_ready_pp.read_int(allow_empty=False)

@@ -18,14 +18,14 @@ def start(config: Config):
 class VersusPlayWorkerBase:
     def __init__(self, config: Config):
         self.config = config
-        assert self.config.opts.n_games == 1
-        assert len(self.config.opts.pipe_pairs) == 3
-        self.parent_pipe_pair = self.config.opts.pipe_pairs[0]
-        self.p1_pipe_pair = self.config.opts.pipe_pairs[1]
-        self.p2_pipe_pair = self.config.opts.pipe_pairs[2]
+        assert self.config.eval.n_games == 1
+        assert len(self.config.ipc.pipe_pairs) == 3
+        self.parent_pipe_pair = self.config.ipc.pipe_pairs[0]
+        self.p1_pipe_pair = self.config.ipc.pipe_pairs[1]
+        self.p2_pipe_pair = self.config.ipc.pipe_pairs[2]
         self.pipe_files = PipeFilesManager.new_one(self.config)
-        self.p1_name = self.config.opts.p1_model_step
-        self.p2_name = self.config.opts.p2_model_step
+        self.p1_name = self.config.eval.p1_model_step
+        self.p2_name = self.config.eval.p2_model_step
 
     def start_p1_server(self, gtp_pipe_pair):
         raise Exception('not implemented yet')
@@ -44,7 +44,7 @@ class VersusPlayWorkerBase:
 
         black, white = p1, p2
         black_name, white_name = self.p1_name, self.p2_name
-        if not self.config.opts.p1_first:
+        if not self.config.eval.p1_first:
             black, white = white, black
             black_name, white_name = white_name, black_name
 
@@ -79,14 +79,14 @@ class VersusPlayWorkerBase:
         final_score = env.score
         ggf.set_final_score(final_score)
 
-        if self.config.opts.save_versus_dir:
-            ggf.write_to_file(self.config.opts.save_versus_dir)
+        if self.config.resource.eval_ggf_dir:
+            ggf.write_to_file(self.config.resource.eval_ggf_dir)
 
         self.pipe_files.clear_pipes()
 
         black, white = [int(x) for x in final_score]
 
-        if self.config.opts.p1_first:
+        if self.config.eval.p1_first:
             p1, p2 = black, white
         else:
             p1, p2 = white, black
@@ -107,18 +107,8 @@ class VersusPlayWorker(VersusPlayWorkerBase):
         return start_child_proc(cmd=cmd)
 
     def start_p1_server(self, gtp_pipe_pair):
-        if self.config.opts.p1_n_sims is not None:
-            p1_config = copy.copy(self.config)
-            p1_config.play.simulation_num_per_move = self.config.opts.p1_n_sims
-        else:
-            p1_config = self.config
-        self.start_gtp_server_process([gtp_pipe_pair, self.p1_pipe_pair], p1_config)
+        self.start_gtp_server_process([gtp_pipe_pair, self.p1_pipe_pair], self.config)
 
     def start_p2_server(self, gtp_pipe_pair):
-        if self.config.opts.p2_n_sims is not None:
-            p2_config = copy.copy(self.config)
-            p2_config.play.simulation_num_per_move = self.config.opts.p2_n_sims
-        else:
-            p2_config = self.config
-        self.start_gtp_server_process([gtp_pipe_pair, self.p2_pipe_pair], p2_config)
+        self.start_gtp_server_process([gtp_pipe_pair, self.p2_pipe_pair], self.config)
 

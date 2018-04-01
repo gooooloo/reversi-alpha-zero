@@ -56,7 +56,6 @@ def create_parser():
     parser.add_argument("--p1-model-step", help="p1-model-step", default=None)
     parser.add_argument("--p2-model-step", help="p2-model-step", default=None)
     parser.add_argument("--pipe-pairs", help="", default=None)
-    parser.add_argument("--save-versus-dir", help="", default=None)
     parser.add_argument("--start-total-steps", help="set TrainerConfig.start_total_steps", type=int)
     return parser
 
@@ -79,7 +78,6 @@ def args_to_opts(args):
     if args.p1_model_step is not None: opts.p1_model_step = args.p1_model_step
     if args.p2_model_step is not None: opts.p2_model_step = args.p2_model_step
     if args.pipe_pairs is not None: opts.pipe_pairs = load_pipe_pairs_names(args.pipe_pairs)
-    if args.save_versus_dir is not None: opts.save_versus_dir = args.save_versus_dir
     if args.start_total_steps is not None: opts.start_total_steps = args.start_total_steps
 
     if args.gpu_mem_frac is not None:
@@ -119,6 +117,30 @@ def setup(config: Config):
 
     if config.opts.model_cache_size is not None:
         config.model_cache.model_cache_size = config.opts.model_cache_size
+
+    if config.opts.gpu_mem_info is not None:
+        config.gpu.gpu_mem_frac = config.opts.gpu_mem_info
+
+    if config.opts.fs_ip is not None:
+        config.ipc.fs_ip = config.opts.fs_ip
+    if config.opts.fs_port is not None:
+        config.ipc.fs_port = config.opts.fs_port
+    if config.opts.pipe_pairs is not None:
+        config.ipc.pipe_pairs = config.opts.pipe_pairs
+    if config.opts.n_workers is not None:
+        config.ipc.n_workers = config.opts.n_workers
+
+    if config.opts.n_games is not None:
+        config.eval.n_games = config.opts.n_games
+    if config.opts.p1_first is not None:
+        config.eval.p1_first = config.opts.p1_first
+    if config.opts.p1_model_step is not None:
+        config.eval.p1_model_step = config.opts.p1_model_step
+    if config.opts.p2_model_step is not None:
+        config.eval.p2_model_step = config.opts.p2_model_step
+
+    if config.opts.model_step is not None:
+        config.model.model_step = config.opts.model_step
 
 
 def start():

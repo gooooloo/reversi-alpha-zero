@@ -18,10 +18,10 @@ def start(config: Config):
 class GTPServerWorker:
     def __init__(self, config: Config):
         config = copy.copy(config)
-        assert len(config.opts.pipe_pairs) in [1, 2]
+        assert len(config.ipc.pipe_pairs) in [1, 2]
 
-        parent_pipe_pair = config.opts.pipe_pairs[0]
-        model_pipe_pair = config.opts.pipe_pairs[1] if len(config.opts.pipe_pairs) == 2 else None
+        parent_pipe_pair = config.ipc.pipe_pairs[0]
+        model_pipe_pair = config.ipc.pipe_pairs[1] if len(config.ipc.pipe_pairs) == 2 else None
 
         config.play.noise_eps = 0
         config.play.change_tau_turn = 0

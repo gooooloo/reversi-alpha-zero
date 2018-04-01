@@ -6,6 +6,8 @@ import sys
 
 import time
 
+import copy
+
 from src.reversi_zero.lib.pipe_helper import dump_pipe_pairs_names
 
 
@@ -25,12 +27,13 @@ def build_child_cmd(type, opts, pipe_pairs):
     add_exit_task(remove_tmp_config_file)
 
     os.makedirs(os.path.dirname(tmp_config_file_path), exist_ok=True)
+    opts = copy.copy(opts)
+    opts.pipe_pairs = dump_pipe_pairs_names(pipe_pairs)
     with open(tmp_config_file_path, 'wt') as f:
         import json
         json.dump(opts.__dict__, f)
 
     cmd = ['python3.6', '-m', 'src.reversi_zero.run', type,
-           '--pipe-pairs', dump_pipe_pairs_names(pipe_pairs),
            '--config-file', tmp_config_file_path
            ]
 

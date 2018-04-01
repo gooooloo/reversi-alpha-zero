@@ -18,7 +18,7 @@ def start(config: Config):
 class EvaluateWorker:
     def __init__(self, config: Config):
         self.config = config
-        assert not self.config.opts.pipe_pairs
+        assert not self.config.ipc.pipe_pairs
         self.pipe_files = PipeFilesManager.new_one(self.config)
         self.grpc_client = GrpcClient(self.config)
 

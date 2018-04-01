@@ -31,7 +31,7 @@ def load_remote_model_weight(model, grpc_client:GrpcClient):
 
 
 def _load_model_weight_internal(model:ReversiModel, grpc_client:GrpcClient):
-    model_step = model.config.opts.model_step
+    model_step = model.config.model.model_step
     if model_step:
         model_step = simplestring_to_modelstep(model_step)
     else:

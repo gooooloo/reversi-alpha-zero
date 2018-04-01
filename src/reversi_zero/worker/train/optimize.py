@@ -20,8 +20,8 @@ logger.setLevel(INFO)
 
 
 def start(config: Config):
-    if config.opts.gpu_mem_frac is not None:
-        tf_util.set_session_config(per_process_gpu_memory_fraction=config.opts.gpu_mem_frac)
+    if config.gpu.gpu_mem_frac is not None:
+        tf_util.set_session_config(per_process_gpu_memory_fraction=config.gpu.gpu_mem_frac)
     return OptimizeWorker(config).start()
 
 

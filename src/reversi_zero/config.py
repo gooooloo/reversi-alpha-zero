@@ -31,8 +31,11 @@ class Config:
         self.play_data = env_specific.PlayDataConfig()
         self.resource = ResourceConfig(opts.env, opts.dir)
         self.trainer = env_specific.TrainerConfig()
+        self.gpu = GPUConfig()
+        self.ipc = IPCConfig()
 
 
+# This class is just for config overwriting. Should not use it in logic codes directly.
 class Options:
     def __init__(self):
         self.can_resign = None
@@ -51,8 +54,20 @@ class Options:
         self.p1_model_step = None
         self.p2_model_step = None
         self.pipe_pairs = None
-        self.save_versus_dir = None
         self.start_total_steps = None
+
+
+class IPCConfig:
+    def __init__(self):
+        self.fs_ip = None
+        self.fs_port = None
+        self.pipe_pairs = None
+        self.n_workers = None
+
+
+class GPUConfig:
+    def __init__(self):
+        self.gpu_mem_frac = None
 
 
 class ResourceConfig:
@@ -71,6 +86,8 @@ class ResourceConfig:
         self.to_eval_model_dir = os.path.join(self.model_dir, "to_eval")
         self.to_eval_model_dirname_tmpl = "model_%s_steps"
         self.eval_result_path = os.path.join(self.to_eval_model_dir, "eval.result.txt")
+
+        self.eval_ggf_dir = os.path.join(self.data_dir, "eval_ggf")
 
         self.play_data_dir = os.path.join(self.data_dir, "play_data")
         self.play_data_filename_tmpl = "play_%s.json"

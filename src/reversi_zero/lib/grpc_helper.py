@@ -54,7 +54,7 @@ MODEL_STEP_TYPE_TO_EVAL = 'E'
 
 class GrpcClient:
     def __init__(self, config):
-        address = f'{config.opts.fs_ip}:{config.opts.fs_port}'
+        address = f'{config.ipc.fs_ip}:{config.ipc.fs_port}'
         channel = grpc.insecure_channel(address)
         logger.info(f'address:{address}')
         self.stub = chunk_pb2_grpc.FileServerStub(channel)
@@ -199,9 +199,9 @@ class GrpcServer(chunk_pb2_grpc.FileServerServicer):
         return decide_resign_v_once(self.config)
 
     def start(self):
-        self.server.add_insecure_port(f'[::]:{self.config.opts.fs_port}')
+        self.server.add_insecure_port(f'[::]:{self.config.ipc.fs_port}')
         self.server.start()
-        logger.info(f'grpc start started. port:{self.config.opts.fs_port}')
+        logger.info(f'grpc start started. port:{self.config.ipc.fs_port}')
 
         try:
             while True:
