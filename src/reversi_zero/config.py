@@ -48,6 +48,7 @@ class Options:
         self.model_cache_size = None
         self.model_step = None
         self.n_games = None
+        self.n_sims = None
         self.n_workers = None
         self.need_eval = None
         self.p1_first = None
