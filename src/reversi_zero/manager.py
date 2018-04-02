@@ -119,7 +119,7 @@ def setup(config: Config):
         config.model_cache.model_cache_size = config.opts.model_cache_size
 
     if config.opts.gpu_mem_info is not None:
-        config.gpu.gpu_mem_frac = config.opts.gpu_mem_info
+        config.gpu.gpu_mem_frac = config.opts.gpu_mem_frac
 
     if config.opts.fs_ip is not None:
         config.ipc.fs_ip = config.opts.fs_ip
