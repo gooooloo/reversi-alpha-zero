@@ -39,11 +39,11 @@ def _load_model_weight_internal(model:ReversiModel, grpc_client:GrpcClient):
 
     config_file = tempfile.NamedTemporaryFile(delete=False)
     config_file.close()
-    grpc_client.download_model_config_now(config_file.name, model_step)
+    grpc_client.download_model_config(config_file.name, model_step)
 
     weight_file = tempfile.NamedTemporaryFile(delete=False)
     weight_file.close()
-    grpc_client.download_model_weight_now(weight_file.name, model_step)
+    grpc_client.download_model_weight(weight_file.name, model_step)
 
     loaded = model.load(config_file.name, weight_file.name)
 
