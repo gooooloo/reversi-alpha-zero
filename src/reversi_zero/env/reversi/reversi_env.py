@@ -220,7 +220,7 @@ class ReversiEnv(IEnv):
     def cob_dtype(self):
         return np.uint64
 
-    def compress_ob(ob):
+    def compress_ob(self, ob):
         cob = np.ndarray([len(ob)], dtype=np.uint64)
         for idx,plane in enumerate(ob):
             x = 0
@@ -232,7 +232,7 @@ class ReversiEnv(IEnv):
 
         return cob
 
-    def decompress_ob(cob):
+    def decompress_ob(self, cob):
 
         ob = np.ndarray([len(cob), 8, 8], dtype=np.uint8)
         for idx,plane in enumerate(cob):
