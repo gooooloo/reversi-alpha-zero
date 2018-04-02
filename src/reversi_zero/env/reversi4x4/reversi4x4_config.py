@@ -33,7 +33,7 @@ class TrainerConfig:
         self.start_total_steps = 0
         self.epoch_steps = 100
         self.save_model_steps = 100
-        self.generation_model_steps = 300
+        self.archive_model_steps = 300
         self.min_data_size_to_learn = 10000
         self.lr_schedule = (  # (learning rate, before step count)
             (0.2,    10000),
