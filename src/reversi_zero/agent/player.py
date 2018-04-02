@@ -41,6 +41,20 @@ class EvaluatePlayer(SelfPlayer):
         return node.full_N, node.full_Q, node.full_combined_V, node.full_P
 
 
+class TimedEvaluatePlayer(EvaluatePlayer):
+    def __init__(self, time_strategy, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.time_strategy = time_strategy
+
+    def think(self, tau=0):
+        timeout = self.time_strategy.get_seconds_for_thinking()
+        return self.game_tree.mcts_and_play(tau, timeout)
+
+    def play(self, *args, **kwargs):
+        self.time_strategy.play()
+        return super().play(*args, **kwargs)
+
+
 class GameTree(object):
     def __init__(self, make_sim_env_fn, config=None, play_config=None, api=None, model_cache=None):
         self.make_sim_env_fn = make_sim_env_fn
