@@ -139,8 +139,8 @@ class GrpcServer(chunk_pb2_grpc.FileServerServicer):
             MODEL_STEP_TYPE_TO_EVAL: os.path.join(rc.to_eval_model_dir,
                                                   rc.to_eval_model_dirname_tmpl % request.step,
                                                   rc.model_weight_filename),
-            MODEL_STEP_TYPE_ARCHIVE: os.path.join(rc.generation_model_dir,
-                                                  rc.generation_model_dirname_tmpl % request.step,
+            MODEL_STEP_TYPE_ARCHIVE: os.path.join(rc.archive_model_dir,
+                                                  rc.archive_model_dirname_tmpl % request.step,
                                                   rc.model_weight_filename)
         }[request.type]
         return get_file_chunks(p)
@@ -161,7 +161,7 @@ class GrpcServer(chunk_pb2_grpc.FileServerServicer):
         logger.info('list_model_steps_to_archive')
 
         rc = self.config.resource
-        pattern = os.path.join(rc.generation_model_dir, rc.generation_model_dirname_tmpl.replace('%s','*'))
+        pattern = os.path.join(rc.archive_model_dir, rc.archive_model_dirname_tmpl.replace('%s','*'))
         for p in glob.glob(pattern):
             step = p[len(pattern.split('*')[0]):-len(pattern.split('*')[1])]
             step = int(step)
@@ -176,7 +176,7 @@ class GrpcServer(chunk_pb2_grpc.FileServerServicer):
         to_eval_weight = os.path.join(to_eval_model_dir, rc.model_weight_filename),
         shutil.copyfile(to_eval_config, rc.model_config_path)
         shutil.copyfile(to_eval_weight, rc.model_weight_path)
-        shutil.move(to_eval_model_dir, rc.generation_model_dir)
+        shutil.move(to_eval_model_dir, rc.archive_model_dir)
 
     def remove_model(self, request, context):
         logger.info('remove_model')
