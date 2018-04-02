@@ -123,8 +123,8 @@ class GrpcServer(chunk_pb2_grpc.FileServerServicer):
             MODEL_STEP_TYPE_TO_EVAL: os.path.join(rc.to_eval_model_dir,
                                                   rc.to_eval_model_dirname_tmpl % request.step,
                                                   rc.model_weight_filename),
-            MODEL_STEP_TYPE_ARCHIVE: os.path.join(rc.generation_model_dir,
-                                                  rc.generation_model_dirname_tmpl % request.step,
+            MODEL_STEP_TYPE_ARCHIVE: os.path.join(rc.archive_model_dir,
+                                                  rc.archive_model_dirname_tmpl % request.step,
                                                   rc.model_config_filename)
         }[request.type]
         return get_file_chunks(p)
