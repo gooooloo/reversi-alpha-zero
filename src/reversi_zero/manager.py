@@ -77,7 +77,7 @@ def args_to_opts(args):
     if args.need_eval is not None: opts.need_eval = args.need_eval
     if args.p1_model_step is not None: opts.p1_model_step = args.p1_model_step
     if args.p2_model_step is not None: opts.p2_model_step = args.p2_model_step
-    if args.pipe_pairs is not None: opts.pipe_pairs = load_pipe_pairs_names(args.pipe_pairs)
+    if args.pipe_pairs is not None: opts.pipe_pairs = args.pipe_pairs
     if args.start_total_steps is not None: opts.start_total_steps = args.start_total_steps
 
     if args.gpu_mem_frac is not None:
@@ -126,7 +126,7 @@ def setup(config: Config):
     if config.opts.fs_port is not None:
         config.ipc.fs_port = config.opts.fs_port
     if config.opts.pipe_pairs is not None:
-        config.ipc.pipe_pairs = config.opts.pipe_pairs
+        config.ipc.pipe_pairs = load_pipe_pairs_names(config.opts.pipe_pairs)
     if config.opts.n_workers is not None:
         config.ipc.n_workers = config.opts.n_workers
 

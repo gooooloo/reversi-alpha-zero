@@ -70,6 +70,7 @@ KEY_UNLOADED_DATA_COUNT = 'unloaded_data_count'
 
 def save_unloaded_data_count(rc: ResourceConfig, count):
     fn = get_game_data_statistics_filename(rc)
+    os.makedirs(os.path.dirname(fn), exist_ok=True)
     with open(fn, "wt") as f:
         json.dump({KEY_UNLOADED_DATA_COUNT: count}, f)
 
