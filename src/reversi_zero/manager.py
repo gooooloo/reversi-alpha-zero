@@ -99,50 +99,6 @@ def args_to_opts(args):
     return opts
 
 
-def setup(config: Config):
-
-    if config.opts.start_total_steps is not None:
-        config.trainer.start_total_steps = config.opts.start_total_steps
-
-    config.resource.create_directories()
-
-    setup_logger(config.resource.main_log_path)
-
-    config.trainer.need_eval = config.opts.need_eval
-
-    if config.opts.can_resign is not None:
-        config.play.can_resign = config.opts.can_resign
-    if config.opts.n_sims is not None:
-        config.play.simulation_num_per_move = config.opts.n_sims
-
-    if config.opts.model_cache_size is not None:
-        config.model_cache.model_cache_size = config.opts.model_cache_size
-
-    if config.opts.gpu_mem_frac is not None:
-        config.gpu.gpu_mem_frac = config.opts.gpu_mem_frac
-
-    if config.opts.fs_ip is not None:
-        config.ipc.fs_ip = config.opts.fs_ip
-    if config.opts.fs_port is not None:
-        config.ipc.fs_port = config.opts.fs_port
-    if config.opts.pipe_pairs is not None:
-        config.ipc.pipe_pairs = load_pipe_pairs_names(config.opts.pipe_pairs)
-    if config.opts.n_workers is not None:
-        config.ipc.n_workers = config.opts.n_workers
-
-    if config.opts.n_games is not None:
-        config.eval.n_games = config.opts.n_games
-    if config.opts.p1_first is not None:
-        config.eval.p1_first = config.opts.p1_first
-    if config.opts.p1_model_step is not None:
-        config.eval.p1_model_step = config.opts.p1_model_step
-    if config.opts.p2_model_step is not None:
-        config.eval.p2_model_step = config.opts.p2_model_step
-
-    if config.opts.model_step is not None:
-        config.model.model_step = config.opts.model_step
-
-
 def start():
 
     parser = create_parser()
@@ -151,7 +107,7 @@ def start():
     opts = args_to_opts(args)
 
     config = Config(opts)
-    setup(config)
+    setup_logger(config.resource.main_log_path)
 
     if args.cmd == 'init':
         from src.reversi_zero.worker.train import init_model as worker

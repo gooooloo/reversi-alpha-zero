@@ -34,6 +34,50 @@ class Config:
         self.gpu = GPUConfig()
         self.ipc = IPCConfig()
 
+        self.setup()
+
+    def setup(self):
+
+        if self.opts.start_total_steps is not None:
+            self.trainer.start_total_steps = self.opts.start_total_steps
+
+        self.resource.create_directories()
+
+        self.trainer.need_eval = self.opts.need_eval
+
+        if self.opts.can_resign is not None:
+            self.play.can_resign = self.opts.can_resign
+        if self.opts.n_sims is not None:
+            self.play.simulation_num_per_move = self.opts.n_sims
+
+        if self.opts.model_cache_size is not None:
+            self.model_cache.model_cache_size = self.opts.model_cache_size
+
+        if self.opts.gpu_mem_frac is not None:
+            self.gpu.gpu_mem_frac = self.opts.gpu_mem_frac
+
+        if self.opts.fs_ip is not None:
+            self.ipc.fs_ip = self.opts.fs_ip
+        if self.opts.fs_port is not None:
+            self.ipc.fs_port = self.opts.fs_port
+        if self.opts.pipe_pairs is not None:
+            from src.reversi_zero.lib.pipe_helper import load_pipe_pairs_names
+            self.ipc.pipe_pairs = load_pipe_pairs_names(self.opts.pipe_pairs)
+        if self.opts.n_workers is not None:
+            self.ipc.n_workers = self.opts.n_workers
+
+        if self.opts.n_games is not None:
+            self.eval.n_games = self.opts.n_games
+        if self.opts.p1_first is not None:
+            self.eval.p1_first = self.opts.p1_first
+        if self.opts.p1_model_step is not None:
+            self.eval.p1_model_step = self.opts.p1_model_step
+        if self.opts.p2_model_step is not None:
+            self.eval.p2_model_step = self.opts.p2_model_step
+
+        if self.opts.model_step is not None:
+            self.model.model_step = self.opts.model_step
+
 
 # This class is just for config overwriting. Should not use it in logic codes directly.
 class Options:

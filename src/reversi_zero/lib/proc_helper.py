@@ -16,6 +16,10 @@ exit_tasks = []
 
 
 def build_child_cmd(type, opts, pipe_pairs):
+    return build_child_cmd_with_module(type=type, opts=opts, pipe_pairs=pipe_pairs, module='src.reversi_zero.run')
+
+
+def build_child_cmd_with_module(type, opts, pipe_pairs, module):
 
     tmp_config_file_path = f'/tmp/reresi_alpha_zero/{opts.env}/' \
                            f'config_{time.time()}_{random.randint(100000, 999999)}.json'
@@ -33,7 +37,7 @@ def build_child_cmd(type, opts, pipe_pairs):
         import json
         json.dump(opts.__dict__, f)
 
-    cmd = ['python3.6', '-m', 'src.reversi_zero.run', type,
+    cmd = ['python3.6', '-m', module, type,
            '--config-file', tmp_config_file_path
            ]
 
